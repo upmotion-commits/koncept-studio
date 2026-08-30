@@ -30,6 +30,7 @@ import { fr } from 'date-fns/locale'
 import { toast } from 'sonner'
 import * as XLSX from 'xlsx'
 import { AdminBookingView } from '@/components/admin/booking/admin-booking-view'
+import { flagNoShow, unflagNoShow } from './actions'
 
 interface BookingStats {
   total: number
@@ -152,6 +153,28 @@ export default function BookingsPage() {
       setLoading(false)
     }
   }, [supabase])
+
+  const handleFlagNoShow = async (bookingId: string) => {
+    const result = await flagNoShow(bookingId)
+    if (!result.success) {
+      toast.error('Absence non enregistrée', { description: result.error })
+      return
+    }
+    toast.success('Absence enregistrée', {
+      description: 'Le membre ne pourra pas réserver pendant 24h.'
+    })
+    fetchBookings()
+  }
+
+  const handleUnflagNoShow = async (bookingId: string) => {
+    const result = await unflagNoShow(bookingId)
+    if (!result.success) {
+      toast.error("Absence non retirée", { description: result.error })
+      return
+    }
+    toast.success('Absence retirée', { description: 'La pénalité a été supprimée.' })
+    fetchBookings()
+  }
 
   const fetchStats = useCallback(async () => {
     try {
@@ -563,6 +586,25 @@ export default function BookingsPage() {
                             {booking.status === 'no_show' && 'Absent'}
                             {!['confirmed', 'cancelled', 'no_show'].includes(booking.status) && booking.status}
                           </Badge>
+                          {booking.status === 'confirmed' && new Date(booking.class_schedules.start_datetime) <= new Date() && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleFlagNoShow(booking.id)}
+                            >
+                              Marquer absent
+                            </Button>
+                          )}
+                          {booking.status === 'no_show' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleUnflagNoShow(booking.id)}
+                            >
+                              Retirer l'absence
+                            </Button>
+                          )}
                         </div>
                       </div>
                       {booking.cancellation_reason && (

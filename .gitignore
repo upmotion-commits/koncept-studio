@@ -138,3 +138,6 @@ public/sw.js
 public/sw.js.map
 public/workbox-*.js
 public/workbox-*.js.map
+# Never commit environment files with real credentials
+.env.production
+.env*.production

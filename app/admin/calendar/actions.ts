@@ -84,36 +84,21 @@ export async function deleteClassEvent({
       // Continue with deletion even if we can't get bookings
     }
 
-    // Refund credits for affected users before deleting
-    if (bookings && bookings.length > 0) {
-      const creditRefundPromises = bookings
-        .filter(booking => booking.subscription_id && (booking.user_subscriptions as any)) // Only bookings with subscriptions
-        .map(async (booking) => {
-          try {
-            const subscription = booking.user_subscriptions as any
-            if (subscription && subscription.credits_remaining !== null) {
-              // Refund one credit to the user
-              const { error: creditError } = await supabase
-                .from('user_subscriptions')
-                .update({
-                  credits_remaining: subscription.credits_remaining + 1,
-                  credits_used: Math.max((subscription.credits_used || 0) - 1, 0)
-                })
-                .eq('id', subscription.id)
-
-              if (creditError) {
-                console.error(`Error refunding credit for user ${booking.user_id}:`, creditError)
-              } else {
-                console.log(`Credit refunded for user ${booking.user_id}, subscription ${subscription.id}`)
-              }
-            }
-          } catch (error) {
-            console.error(`Error processing credit refund for booking ${booking.id}:`, error)
-          }
-        })
-
-      // Wait for all credit refunds to complete before proceeding
-      await Promise.allSettled(creditRefundPromises)
+    // Cancel + refund every confirmed booking (and waitlist entry) on the
+    // affected FUTURE schedules, type-aware (weekly credit for abonnement,
+    // carnet credit otherwise), atomically per schedule. Past classes are not
+    // refunded — those credits were legitimately consumed. This replaces the
+    // old logic that always credited `credits_remaining` (wrong field for
+    // abonnement users) and refunded historical bookings.
+    for (const scheduleId of scheduleIds) {
+      const { data: refundResult, error: refundError } = await supabase.rpc(
+        'admin_refund_schedule_bookings',
+        { p_schedule_id: scheduleId }
+      )
+      if (refundError || !refundResult?.success) {
+        console.error(`Error refunding schedule ${scheduleId}:`, refundError || refundResult)
+        return { success: false, error: 'Erreur lors du remboursement des réservations. Suppression annulée.' }
+      }
     }
 
     // Delete the class schedule(s)
@@ -227,36 +212,15 @@ export async function cancelClassEvent({
       // Continue with cancellation even if we can't get bookings
     }
 
-    // Refund credits for affected users before cancelling
-    if (bookings && bookings.length > 0) {
-      const creditRefundPromises = bookings
-        .filter(booking => booking.subscription_id && (booking.user_subscriptions as any)) // Only bookings with subscriptions
-        .map(async (booking) => {
-          try {
-            const subscription = booking.user_subscriptions as any
-            if (subscription && subscription.credits_remaining !== null) {
-              // Refund one credit to the user
-              const { error: creditError } = await supabase
-                .from('user_subscriptions')
-                .update({
-                  credits_remaining: subscription.credits_remaining + 1,
-                  credits_used: Math.max((subscription.credits_used || 0) - 1, 0)
-                })
-                .eq('id', subscription.id)
-
-              if (creditError) {
-                console.error(`Error refunding credit for user ${booking.user_id}:`, creditError)
-              } else {
-                console.log(`Credit refunded for user ${booking.user_id}, subscription ${subscription.id}`)
-              }
-            }
-          } catch (error) {
-            console.error(`Error processing credit refund for booking ${booking.id}:`, error)
-          }
-        })
-
-      // Wait for all credit refunds to complete before proceeding
-      await Promise.allSettled(creditRefundPromises)
+    // Cancel + refund every confirmed booking and waitlist entry, type-aware
+    // and atomic (see deleteClassEvent above for details).
+    const { data: refundResult, error: refundError } = await supabase.rpc(
+      'admin_refund_schedule_bookings',
+      { p_schedule_id: eventId }
+    )
+    if (refundError || !refundResult?.success) {
+      console.error(`Error refunding schedule ${eventId}:`, refundError || refundResult)
+      return { success: false, error: 'Erreur lors du remboursement des réservations. Annulation interrompue.' }
     }
 
     // Cancel the event

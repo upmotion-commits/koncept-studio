@@ -498,7 +498,7 @@ export type Database = {
         Row: {
           id: string
           user_id: string | null
-          event_type: 'signup' | 'activation' | 'waitlist_promotion' | 'class_cancellation' | 'subscription_request'
+          event_type: 'signup' | 'activation' | 'waitlist_promotion' | 'class_cancellation' | 'subscription_request' | 'subscription_expiring'
           phone_number: string
           message_content: string
           status: 'pending' | 'success' | 'failed'
@@ -511,7 +511,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id?: string | null
-          event_type: 'signup' | 'activation' | 'waitlist_promotion' | 'class_cancellation' | 'subscription_request'
+          event_type: 'signup' | 'activation' | 'waitlist_promotion' | 'class_cancellation' | 'subscription_request' | 'subscription_expiring'
           phone_number: string
           message_content: string
           status?: 'pending' | 'success' | 'failed'
@@ -524,7 +524,7 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string | null
-          event_type?: 'signup' | 'activation' | 'waitlist_promotion' | 'class_cancellation'
+          event_type?: 'signup' | 'activation' | 'waitlist_promotion' | 'class_cancellation' | 'subscription_request' | 'subscription_expiring'
           phone_number?: string
           message_content?: string
           status?: 'pending' | 'success' | 'failed'
@@ -673,6 +673,69 @@ export type Database = {
           schedule_id: string
           subscription_id: string
         }
+        Returns: Json
+      }
+      book_class_v2: {
+        Args: {
+          p_schedule_id: string
+        }
+        Returns: Json
+      }
+      cancel_booking_v2: {
+        Args: {
+          p_booking_id: string
+        }
+        Returns: Json
+      }
+      join_waitlist_v2: {
+        Args: {
+          p_schedule_id: string
+        }
+        Returns: Json
+      }
+      leave_waitlist_v2: {
+        Args: {
+          p_waitlist_id: string
+        }
+        Returns: Json
+      }
+      admin_book_class_v2: {
+        Args: {
+          p_user_id: string
+          p_schedule_id: string
+        }
+        Returns: Json
+      }
+      admin_refund_schedule_bookings: {
+        Args: {
+          p_schedule_id: string
+        }
+        Returns: Json
+      }
+      flag_no_show: {
+        Args: {
+          p_booking_id: string
+        }
+        Returns: Json
+      }
+      unflag_no_show: {
+        Args: {
+          p_booking_id: string
+        }
+        Returns: Json
+      }
+      handle_waitlist_promotion: {
+        Args: {
+          schedule_uuid: string
+        }
+        Returns: Json
+      }
+      expire_subscriptions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      cleanup_expired_waitlists: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       renew_subscription: {

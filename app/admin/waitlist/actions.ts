@@ -105,21 +105,9 @@ export async function promoteFromWaitlist(waitlistEntryId: string): Promise<{ su
       // Don't fail the whole process if this fails
     }
 
-    // Update subscription credits if it's a credit-based plan
-    if (subscription.credits_remaining > 0) {
-      const { error: creditError } = await supabase
-        .from('user_subscriptions')
-        .update({
-          credits_remaining: subscription.credits_remaining - 1,
-          credits_used: (subscription.credits_used || 0) + 1
-        })
-        .eq('id', subscription.id)
-
-      if (creditError) {
-        console.error('Error updating credits:', creditError)
-        // Don't fail the process if this fails
-      }
-    }
+    // NOTE: no credit deduction here. The user already paid one credit when
+    // joining the waitlist; deducting again on promotion double-charged them
+    // (verified in the production audit).
 
     // Send WhatsApp notification if user has phone number
     if (user.phone) {
@@ -251,21 +239,9 @@ export async function forcePromoteFromWaitlist(waitlistEntryId: string): Promise
       // Don't fail the whole process if this fails
     }
 
-    // Update subscription credits if it's a credit-based plan
-    if (subscription.credits_remaining > 0) {
-      const { error: creditError } = await supabase
-        .from('user_subscriptions')
-        .update({
-          credits_remaining: subscription.credits_remaining - 1,
-          credits_used: (subscription.credits_used || 0) + 1
-        })
-        .eq('id', subscription.id)
-
-      if (creditError) {
-        console.error('Error updating credits:', creditError)
-        // Don't fail the process if this fails
-      }
-    }
+    // NOTE: no credit deduction here. The user already paid one credit when
+    // joining the waitlist; deducting again on promotion double-charged them
+    // (verified in the production audit).
 
     // Send WhatsApp notification if user has phone number
     if (user.phone) {

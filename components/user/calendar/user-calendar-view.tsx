@@ -62,6 +62,7 @@ interface ClassEvent {
     status: 'confirmed' | 'cancelled' | 'no_show'
   }
   user_waitlist_position?: number
+  user_waitlist_id?: string
 }
 
 interface UserCalendarViewProps {
@@ -311,7 +312,7 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
           .in('status', ['confirmed']),
         supabase
           .from('class_waitlist')
-          .select('schedule_id, position')
+          .select('id, schedule_id, position')
           .eq('user_id', user.id)
       ])
 
@@ -322,7 +323,8 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
       const eventsWithBookingStatus = weekEvents.map(event => ({
         ...event,
         user_booking: bookingsResult.data?.find(b => b.schedule_id === event.id),
-        user_waitlist_position: waitlistResult.data?.find(w => w.schedule_id === event.id)?.position
+        user_waitlist_position: waitlistResult.data?.find(w => w.schedule_id === event.id)?.position,
+        user_waitlist_id: waitlistResult.data?.find(w => w.schedule_id === event.id)?.id
       }))
 
       setEvents(eventsWithBookingStatus)
@@ -452,6 +454,33 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
     }
   }
 
+  const handleLeaveWaitlist = async (event: ClassEvent) => {
+    if (!event.user_waitlist_id) return
+    try {
+      setLoading(true)
+      const result = await bookingService.leaveWaitlist(event.user_waitlist_id)
+
+      if (!result.success) {
+        toast.error("Erreur lors de la sortie de liste d'attente", {
+          description: result.error || "Une erreur inattendue s'est produite"
+        })
+        return
+      }
+
+      toast.success("Retiré de la liste d'attente", {
+        description: 'Votre crédit a été remboursé.'
+      })
+
+      await Promise.all([fetchEvents(), refreshSubscriptionData()])
+    } catch (err: any) {
+      toast.error("Erreur lors de la sortie de liste d'attente", {
+        description: err.message || "Une erreur inattendue s'est produite"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Check if cancellation is allowed (must be more than 1 hour before class starts)
   const canCancelBooking = (event: ClassEvent) => {
     if (!event.user_booking) return false
@@ -552,7 +581,7 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
       // Fetch user's waitlist positions
       const { data: waitlistData, error: waitlistError } = await supabase
         .from('class_waitlist')
-        .select('schedule_id, position')
+        .select('id, schedule_id, position')
         .eq('user_id', user.id)
 
       if (waitlistError) throw waitlistError
@@ -561,7 +590,8 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
       const eventsWithBookingStatus = eventsData?.map(event => ({
         ...event,
         user_booking: bookingsData?.find(b => b.schedule_id === event.id),
-        user_waitlist_position: waitlistData?.find(w => w.schedule_id === event.id)?.position
+        user_waitlist_position: waitlistData?.find(w => w.schedule_id === event.id)?.position,
+        user_waitlist_id: waitlistData?.find(w => w.schedule_id === event.id)?.id
       })) || []
 
       setEvents(eventsWithBookingStatus)
@@ -590,7 +620,7 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
   const getOpeningTimeMessage = (eventDate: Date) => {
     const day = eventDate.getDay();
     if ([1, 2, 4].includes(day)) return "dimanche à 17:00"; // Mon, Tue, Thu
-    if ([3, 5, 6].includes(day)) return "jeudi à 17:00";    // Wed, Fri, Sat
+    if ([3, 5, 6].includes(day)) return "mercredi à 17:00"; // Wed, Fri, Sat (window 2 opens Wednesday 17:00)
     return "bientôt";
   };
 
@@ -1273,8 +1303,15 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
                         Annuler la réservation
                       </Button>
                     ) : selectedEvent.user_waitlist_position ? (
-                      <Button variant="outline" disabled>
-                        En liste d'attente
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          handleLeaveWaitlist(selectedEvent)
+                          setShowEventModal(false)
+                        }}
+                        disabled={loading}
+                      >
+                        Quitter la liste d'attente
                       </Button>
                     ) : (
                       <>
@@ -1283,7 +1320,7 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
                             <IconCalendarX className="h-4 w-4 mr-2" />
                             Réservations bientôt ouvertes
                           </Button>
-                        ) : isEventBookingOpen(new Date(selectedEvent.start_datetime)) ? (
+                        ) : !isEventBookingOpen(new Date(selectedEvent.start_datetime)) ? (
                           <Button variant="outline" disabled>
                             <IconCalendarX className="h-4 w-4 mr-2" />
                             Ouverture : {getOpeningTimeMessage(new Date(selectedEvent.start_datetime))}
@@ -1397,22 +1434,23 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
                         </span>
                       </div>
                       <div className="mt-3">
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-muted-foreground">Taux de remplissage</span>
-                          <span>{Math.round((selectedEvent.current_bookings / selectedEvent.max_capacity) * 100)}%</span>
+                        <div className="flex justify-between text-sm mb-1.5">
+                          <span className="text-muted-foreground">Remplissage</span>
+                          <span className="font-mono text-xs tabular-nums">
+                            {selectedEvent.current_bookings}/{selectedEvent.max_capacity}
+                          </span>
                         </div>
-                        <div className="w-full bg-muted rounded-full h-2">
-                          <div
-                            className={cn(
-                              "h-2 rounded-full transition-all",
-                              selectedEvent.current_bookings / selectedEvent.max_capacity >= 0.9 ? "bg-destructive" :
-                                selectedEvent.current_bookings / selectedEvent.max_capacity >= 0.7 ? "bg-muted" :
-                                  "bg-muted-foreground"
-                            )}
-                            style={{
-                              width: `${Math.min(100, (selectedEvent.current_bookings / selectedEvent.max_capacity) * 100)}%`
-                            }}
-                          />
+                        {/* Segmented bar: one tick per place (Direction «Charbon») */}
+                        <div className="flex gap-0.5" aria-hidden="true">
+                          {Array.from({ length: Math.min(selectedEvent.max_capacity, 24) }).map((_, i) => (
+                            <span
+                              key={i}
+                              className={cn(
+                                "h-2 flex-1 rounded-[1px] transition-colors",
+                                i < selectedEvent.current_bookings ? "bg-primary" : "bg-muted"
+                              )}
+                            />
+                          ))}
                         </div>
                       </div>
                     </CardContent>

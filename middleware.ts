@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
   
   const { supabaseResponse, user } = await updateSession(request)
   
-  if (pathname === '/reset-password' || pathname === '/auth/callback') {
+  if (pathname === '/reset-password' || pathname === '/auth/callback' || pathname === '/auth/confirm') {
     return supabaseResponse
   }
   

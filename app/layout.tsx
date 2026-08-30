@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans } from "next/font/google";
+import { Barlow, Barlow_Condensed, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { ConditionalNavbar } from "@/components/nav/conditional-navbar";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -10,10 +10,26 @@ import { BackToTop } from "@/components/ui/back-to-top";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { PWAWrapper } from "@/components/pwa/pwa-wrapper";
 
-const ibmPlexSans = IBM_Plex_Sans({
+// Direction «Charbon» — sport/performance identity:
+// Barlow for text, Barlow Condensed for display headings, Plex Mono for data.
+const barlow = Barlow({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-ibm-plex-sans",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-barlow",
+  display: "swap",
+});
+
+const barlowCondensed = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-barlow-condensed",
+  display: "swap",
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-plex-mono",
   display: "swap",
 });
 
@@ -109,7 +125,7 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${ibmPlexSans.variable} font-sans`}>
+      <body className={`${barlow.variable} ${barlowCondensed.variable} ${plexMono.variable} font-sans`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

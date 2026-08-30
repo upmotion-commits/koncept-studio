@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 
 // API endpoint for cron job to clean up expired waitlist entries
@@ -10,7 +10,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = await createClient()
+    // Cron requests carry no user cookies: use the service role so the
+    // RPCs keep working once client roles lose EXECUTE on them (lockdown).
+    const supabase = createAdminClient()
 
     // Call the cleanup function
     const { data: result, error } = await supabase

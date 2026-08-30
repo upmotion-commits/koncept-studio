@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import ForgotPasswordForm from './forgot-password-form'
@@ -22,7 +23,9 @@ export default async function ForgotPasswordPage() {
       <div className="relative z-10 max-w-md w-full">
         <Card className="shadow-brutal border-2 border-border bg-card/95 backdrop-blur-sm animate-slide-up">
           <CardContent className="pt-8">
-            <ForgotPasswordForm />
+            <Suspense>
+              <ForgotPasswordForm />
+            </Suspense>
           </CardContent>
         </Card>
       </div>

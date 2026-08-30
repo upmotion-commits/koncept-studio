@@ -164,3 +164,35 @@ L'équipe Koncept Studio 💪`
 
 
 
+
+/**
+ * Generate subscription expiry warning WhatsApp message (sent ~7 days before
+ * the plan's end date by the expiring-subscriptions cron)
+ */
+export function generateSubscriptionExpiryMessage(
+  user: UserProfile,
+  planName: string,
+  endDateIso: string
+): string {
+  const name = user.full_name || 'Cher membre'
+  const endDate = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Africa/Casablanca',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(endDateIso))
+
+  return `⏳ *Votre abonnement expire bientôt*
+
+Bonjour ${name},
+
+Votre formule *${planName}* arrive à expiration le *${endDate}*.
+
+Pour continuer à réserver vos cours sans interruption, pensez à renouveler votre abonnement :
+• Directement au studio
+• Ou contactez-nous au ${formatPhoneNumber(APP_CONFIG.CONTACT.PHONE)}
+
+À très vite !
+
+L'équipe Koncept Studio 💪`
+}

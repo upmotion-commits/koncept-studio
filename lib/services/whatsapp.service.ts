@@ -20,7 +20,7 @@ interface WasenderResponse {
 interface SendWhatsAppMessageParams {
   phoneNumber: string
   message: string
-  eventType: 'signup' | 'activation' | 'waitlist_promotion' | 'class_cancellation' | 'subscription_request'
+  eventType: 'signup' | 'activation' | 'waitlist_promotion' | 'class_cancellation' | 'subscription_request' | 'subscription_expiring'
   userId?: string | null
 }
 

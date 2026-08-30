@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,7 +17,19 @@ export default function ForgotPasswordForm() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
+
+  // Surface errors coming back from the email-link flow (previously the
+  // ?error= query param was silently ignored and users saw a dead end)
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (error === 'invalid_link') {
+      toast.error('Lien invalide ou expiré', {
+        description: 'Veuillez demander un nouveau lien de réinitialisation ci-dessous.'
+      })
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -17,7 +17,9 @@ export default {
   	},
   	extend: {
   		fontFamily: {
-  			sans: ['var(--font-ibm-plex-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+  			sans: ['var(--font-barlow)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+  			display: ['var(--font-barlow-condensed)', 'var(--font-barlow)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+  			mono: ['var(--font-plex-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
   		},
   		colors: {
   			border: 'hsl(var(--border))',
