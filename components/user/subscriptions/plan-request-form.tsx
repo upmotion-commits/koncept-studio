@@ -16,6 +16,7 @@ import {
 import { CreateRequestData } from '@/lib/schemas/subscription-requests'
 import { createSubscriptionRequest, getAvailableSubscriptionPlans } from '@/app/espace/subscriptions/actions'
 import { toast } from 'sonner'
+import { LoadingSpinner } from '@/components/ui/loading'
 
 interface PlanRequestFormProps {
   onSuccess?: () => void
@@ -148,22 +149,16 @@ export function PlanRequestForm({ onSuccess, onCancel, className }: PlanRequestF
 
   if (isLoadingPlans) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto"></div>
-        <p className="text-muted-foreground mt-4">Chargement des formules...</p>
-      </div>
+      <LoadingSpinner message="Chargement des formules" />
     )
   }
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Nouvelle demande d'abonnement</h2>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Sélectionnez la formule qui vous intéresse pour créer votre demande
-        </p>
-      </div>
+      {/* Header — the title itself lives in the DialogHeader above */}
+      <p className="text-sm sm:text-base text-muted-foreground">
+        Sélectionnez la formule qui vous intéresse pour créer votre demande
+      </p>
 
       {/* Plan Types and Plans */}
       <div className="space-y-4 sm:space-y-6">
@@ -302,7 +297,7 @@ export function PlanRequestForm({ onSuccess, onCancel, className }: PlanRequestF
               onClick={onCancel}
               disabled={isLoading}
               size="lg"
-              className="min-w-[150px] w-full sm:w-auto border-foreground/20 text-foreground hover:bg-foreground hover:text-background order-2 sm:order-1"
+              className="min-w-[150px] w-full sm:w-auto order-2 sm:order-1"
             >
               Annuler
             </Button>
@@ -311,7 +306,7 @@ export function PlanRequestForm({ onSuccess, onCancel, className }: PlanRequestF
             onClick={handleSubmit}
             disabled={!selectedPlan || isLoading}
             size="lg"
-            className="min-w-[200px] w-full sm:w-auto bg-foreground text-background hover:bg-foreground/90 order-1 sm:order-2"
+            className="min-w-[200px] w-full sm:w-auto order-1 sm:order-2"
           >
             {isLoading ? 'Création en cours...' : 'Créer la demande'}
           </Button>

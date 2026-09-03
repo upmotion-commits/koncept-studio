@@ -198,7 +198,7 @@ export default function CancellationsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex-1 space-y-8 p-8">
+      <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Annulations</h1>
@@ -215,7 +215,7 @@ export default function CancellationsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-8 p-8">
+    <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Annulations</h1>

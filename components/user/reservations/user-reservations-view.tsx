@@ -259,7 +259,7 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
               <p className="text-sm">
                 Votre compte a été suspendu. Veuillez contacter le studio pour résoudre cette situation.
               </p>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <Button variant="outline" onClick={() => window.open('tel:0663235797')}>
                   Appeler le studio
                 </Button>
@@ -288,8 +288,8 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8 text-center sm:text-left">
-          <h1 className="text-3xl lg:text-4xl font-bold text-gradient mb-3">Mes réservations</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">Mes réservations</h1>
           <p className="text-muted-foreground text-sm sm:text-base">
             Gérez vos cours réservés et votre liste d'attente
           </p>
@@ -318,14 +318,14 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
         {/* Show tabs only if user doesn't have personal training only */}
         {!hasOnlyPersonalTraining && (
           <Tabs defaultValue="upcoming" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-card border border-border rounded-lg p-1">
-            <TabsTrigger value="upcoming">
+          <TabsList className="grid w-full grid-cols-3 h-auto gap-1 bg-card border border-border rounded-lg p-1">
+            <TabsTrigger value="upcoming" className="min-h-[44px] px-1.5 text-xs sm:text-sm">
               À venir ({upcomingBookings.length})
             </TabsTrigger>
-            <TabsTrigger value="waitlist">
+            <TabsTrigger value="waitlist" className="min-h-[44px] px-1.5 text-xs sm:text-sm">
               Liste d'attente ({upcomingWaitlist.length})
             </TabsTrigger>
-            <TabsTrigger value="history">
+            <TabsTrigger value="history" className="min-h-[44px] px-1.5 text-xs sm:text-sm">
               Historique ({pastBookings.length})
             </TabsTrigger>
           </TabsList>
@@ -406,7 +406,7 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
                               variant="outline"
                               size="sm"
                               onClick={() => handleCancelBooking(booking)}
-                              className="w-full sm:w-auto"
+                              className="w-full sm:w-auto min-h-[44px] sm:min-h-0"
                             >
                               Annuler
                             </Button>
@@ -442,48 +442,48 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
 
                 return (
                   <Card key={entry.id} className="glass-effect shadow-soft border-l-4 border-l-foreground">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-3 flex-1">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="space-y-3 flex-1 min-w-0">
                           <div>
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
                               <h3 className="font-semibold text-lg">
                                 {entry.class_schedules.classes.title}
                               </h3>
-                              <Badge variant="secondary">
+                              <Badge variant="secondary" className="text-xs">
                                 {getDifficultyLabel(entry.class_schedules.classes.difficulty_level)}
                               </Badge>
-                              <Badge variant="secondary">
+                              <Badge variant="secondary" className="text-xs">
                                 Position #{entry.position}
                               </Badge>
                             </div>
                             {entry.class_schedules.classes.description && (
-                              <p className="text-muted-foreground text-sm">
+                              <p className="text-muted-foreground text-sm line-clamp-2">
                                 {entry.class_schedules.classes.description}
                               </p>
                             )}
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                             <div className="flex items-center gap-2">
-                              <IconCalendar className="h-4 w-4 text-muted-foreground" />
-                              <span>{formatDateWithCapitalization(startTime, 'EEEE d MMM')}</span>
+                              <IconCalendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="truncate">{formatDateWithCapitalization(startTime, 'EEEE d MMM')}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <IconClock className="h-4 w-4 text-muted-foreground" />
+                              <IconClock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                               <span>{format(startTime, 'HH:mm')} - {format(endTime, 'HH:mm')}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <IconUser className="h-4 w-4 text-muted-foreground" />
-                              <span>{entry.class_schedules.classes.coach}</span>
+                              <IconUser className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="truncate">{entry.class_schedules.classes.coach}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <IconMapPin className="h-4 w-4 text-muted-foreground" />
-                              <span>{entry.class_schedules.classes.location}</span>
+                              <IconMapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="truncate">{entry.class_schedules.classes.location}</span>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                             <div className="text-xs text-muted-foreground">
                               Ajouté le {format(new Date(entry.joined_at), 'dd/MM/yyyy à HH:mm', { locale: fr })}
                             </div>
@@ -493,14 +493,16 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
                           </div>
                         </div>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleLeaveWaitlist(entry)}
-                          className="border-foreground text-foreground hover:bg-foreground hover:text-background"
-                        >
-                          Quitter
-                        </Button>
+                        <div className="flex-shrink-0 self-start sm:self-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleLeaveWaitlist(entry)}
+                            className="w-full sm:w-auto"
+                          >
+                            Quitter la liste d&apos;attente
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -535,46 +537,46 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
 
                 return (
                   <Card key={booking.id} className="glass-effect shadow-soft opacity-75">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-3 flex-1">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="space-y-3 flex-1 min-w-0">
                           <div>
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
                               <h3 className="font-semibold text-lg">
                                 {booking.class_schedules.classes.title}
                               </h3>
-                              <Badge variant="secondary">
+                              <Badge variant="secondary" className="text-xs">
                                 {getDifficultyLabel(booking.class_schedules.classes.difficulty_level)}
                               </Badge>
                             </div>
                             {booking.class_schedules.classes.description && (
-                              <p className="text-muted-foreground text-sm">
+                              <p className="text-muted-foreground text-sm line-clamp-2">
                                 {booking.class_schedules.classes.description}
                               </p>
                             )}
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                             <div className="flex items-center gap-2">
-                              <IconCalendar className="h-4 w-4 text-muted-foreground" />
-                              <span>{formatDateWithCapitalization(startTime, 'EEEE d MMM')}</span>
+                              <IconCalendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="truncate">{formatDateWithCapitalization(startTime, 'EEEE d MMM')}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <IconClock className="h-4 w-4 text-muted-foreground" />
+                              <IconClock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                               <span>{format(startTime, 'HH:mm')} - {format(endTime, 'HH:mm')}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <IconUser className="h-4 w-4 text-muted-foreground" />
-                              <span>{booking.class_schedules.classes.coach}</span>
+                              <IconUser className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="truncate">{booking.class_schedules.classes.coach}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <IconMapPin className="h-4 w-4 text-muted-foreground" />
-                              <span>{booking.class_schedules.classes.location}</span>
+                              <IconMapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="truncate">{booking.class_schedules.classes.location}</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-2">
+                        <div className="flex flex-row-reverse items-center gap-2 sm:flex-col sm:items-end">
                           <Badge variant="secondary" className={statusColor}>
                             {booking.status === 'confirmed' ? <IconCircleCheck className="h-3 w-3 mr-1" /> : <IconCircleX className="h-3 w-3 mr-1" />}
                             {statusLabel}

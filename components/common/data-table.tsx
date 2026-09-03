@@ -110,8 +110,8 @@ export function DataTable<T>({
       <CardContent>
         {/* Search */}
         {searchKey && (
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <div className="relative flex-1 min-w-[12rem] sm:max-w-sm">
               <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder={searchPlaceholder}
@@ -197,7 +197,7 @@ export function DataTable<T>({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4">
+              <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                   <span>
                     Affichage {startIndex + 1}-{Math.min(startIndex + pageSize, filteredData.length)} sur {filteredData.length}

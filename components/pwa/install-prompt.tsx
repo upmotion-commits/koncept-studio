@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { IconDownload, IconX, IconDeviceMobile, IconBrowser } from '@tabler/icons-react'
@@ -16,6 +17,7 @@ export function InstallPrompt() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     // Set client-side flag
@@ -103,58 +105,83 @@ export function InstallPrompt() {
     return null
   }
 
+  // Never cover the planning: it is the screen members use the moment the
+  // booking window opens, and this banner used to sit on top of the
+  // "Réserver" buttons.
+  if (pathname?.startsWith('/espace/planning')) {
+    return null
+  }
+
   return (
-    <Card className="fixed bottom-4 left-4 right-4 z-50 shadow-lg border-2 border-primary/20 md:max-w-md md:left-auto">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <IconDeviceMobile className="w-5 h-5 text-primary" />
-            <CardTitle className="text-lg">Installer l'Application</CardTitle>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDismiss}
-            className="h-6 w-6 p-0"
-          >
-            <IconX className="w-4 h-4" />
-          </Button>
-        </div>
-        <CardDescription>
-          Installez Koncept Studio pour une expérience native
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-3">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <IconBrowser className="w-4 h-4" />
-          <span>Accès rapide depuis votre écran d'accueil</span>
-        </div>
-
-        <div className="flex gap-2">
-          <Button
-            onClick={handleInstallClick}
-            className="flex-1 gap-2"
-            size="sm"
-          >
-            <IconDownload className="w-4 h-4" />
+    <>
+      {/* Mobile: a compact one-line bar so it never swallows half the screen */}
+      <div className="fixed inset-x-3 bottom-3 z-50 md:hidden">
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-card/95 p-2 shadow-lg backdrop-blur">
+          <IconDeviceMobile className="ml-1 h-5 w-5 flex-shrink-0 text-primary" />
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">
+            Installer l&apos;application
+          </span>
+          <Button onClick={handleInstallClick} size="sm" className="h-9 flex-shrink-0">
+            <IconDownload className="mr-1.5 h-4 w-4" />
             Installer
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={handleDismiss}
-            size="sm"
+            className="h-9 w-9 flex-shrink-0 p-0"
+            aria-label="Plus tard"
           >
-            Plus tard
+            <IconX className="h-4 w-4" />
           </Button>
         </div>
+      </div>
 
-        {!deferredPrompt && (
-          <p className="text-xs text-muted-foreground">
-            💡 Si le bouton ne fonctionne pas, utilisez le menu ⋮ de votre navigateur → "Ajouter à l'écran d'accueil"
-          </p>
-        )}
-      </CardContent>
-    </Card>
+      {/* Desktop: the full card, unchanged */}
+      <Card className="fixed bottom-4 right-4 z-50 hidden w-full max-w-md shadow-lg border-2 border-primary/20 md:block">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <IconDeviceMobile className="w-5 h-5 text-primary" />
+              <CardTitle className="text-lg">Installer l&apos;Application</CardTitle>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDismiss}
+              className="h-6 w-6 p-0"
+              aria-label="Fermer"
+            >
+              <IconX className="w-4 h-4" />
+            </Button>
+          </div>
+          <CardDescription>
+            Installez Koncept Studio pour une expérience native
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <IconBrowser className="w-4 h-4" />
+            <span>Accès rapide depuis votre écran d&apos;accueil</span>
+          </div>
+
+          <div className="flex gap-2">
+            <Button onClick={handleInstallClick} className="flex-1 gap-2" size="sm">
+              <IconDownload className="w-4 h-4" />
+              Installer
+            </Button>
+            <Button variant="outline" onClick={handleDismiss} size="sm">
+              Plus tard
+            </Button>
+          </div>
+
+          {!deferredPrompt && (
+            <p className="text-xs text-muted-foreground">
+              💡 Si le bouton ne fonctionne pas, utilisez le menu ⋮ de votre navigateur → &quot;Ajouter à l&apos;écran d&apos;accueil&quot;
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </>
   )
 }

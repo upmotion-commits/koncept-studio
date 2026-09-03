@@ -117,14 +117,14 @@ export default function SubscriptionsPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button
-                  className="bg-foreground text-background hover:bg-foreground/90 w-full sm:w-auto"
+                  className="w-full sm:w-auto"
                   onClick={() => window.open('tel:0663235797')}
                 >
                   Appeler le studio
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full sm:w-auto"
+                  className="w-full sm:w-auto"
                   onClick={() => window.open('https://wa.me/212663235797')}
                 >
                   WhatsApp
@@ -139,7 +139,7 @@ export default function SubscriptionsPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <LoadingSpinner message="Chargement de vos demandes" />
       </div>
     )
@@ -147,12 +147,12 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6">
       {/* Header */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div className="text-center sm:text-left">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Mes demandes</h1>
+          <div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">Mes demandes</h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Gérez vos demandes d'abonnement et suivez leur progression
             </p>
@@ -162,7 +162,7 @@ export default function SubscriptionsPage() {
             <DialogTrigger asChild>
               <Button
                 disabled={!data?.canCreateRequest}
-                className="w-full sm:w-auto bg-foreground text-background hover:bg-foreground/90 gap-2 sm:mt-0"
+                className="w-full sm:w-auto gap-2 sm:mt-0"
                 size="lg"
               >
                 <IconPlus className="h-4 w-4" />
@@ -218,7 +218,7 @@ export default function SubscriptionsPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h4 className="font-medium text-foreground text-sm sm:text-base">{subscription.subscription_plans?.name}</h4>
-                      <Badge className="bg-foreground text-background hover:bg-foreground/90 text-xs">
+                      <Badge className="text-xs">
                         Actif
                       </Badge>
                     </div>
@@ -268,7 +268,7 @@ export default function SubscriptionsPage() {
               variant="outline"
               size="sm"
               onClick={loadData}
-              className="gap-2 border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full sm:w-auto"
+              className="gap-2 w-full sm:w-auto"
             >
               <IconRefresh className="h-4 w-4" />
               <span className="text-sm">Actualiser</span>
@@ -300,7 +300,7 @@ export default function SubscriptionsPage() {
             <Button
               onClick={() => setShowNewRequestForm(true)}
               disabled={!data?.canCreateRequest}
-              className="gap-2 bg-foreground text-background hover:bg-foreground/90 w-full sm:w-auto"
+              className="gap-2 w-full sm:w-auto"
               size="lg"
             >
               <IconPlus className="h-4 w-4" />

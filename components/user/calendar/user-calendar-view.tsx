@@ -753,7 +753,7 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
               <p className="text-sm">
                 Votre compte a été suspendu. Veuillez contacter le studio pour résoudre cette situation.
               </p>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <Button variant="outline" onClick={() => window.open('tel:0663235797')}>
                   Appeler le studio
                 </Button>
@@ -1126,22 +1126,22 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
                                   )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <IconClock className="h-4 w-4 text-muted-foreground" />
-                                    <span>{format(startTime, 'HH:mm')} - {format(endTime, 'HH:mm')}</span>
+                                <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <IconClock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                    <span className="truncate">{format(startTime, 'HH:mm')} - {format(endTime, 'HH:mm')}</span>
                                   </div>
-                                  <div className="flex items-center gap-2 ml-8">
-                                    <IconUser className="h-4 w-4 text-muted-foreground" />
-                                    <span>{event.coach}</span>
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <IconUser className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                    <span className="truncate">{event.coach}</span>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <IconMapPin className="h-4 w-4 text-muted-foreground" />
-                                    <span>{event.location}</span>
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <IconMapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                    <span className="truncate">{event.location}</span>
                                   </div>
-                                  <div className="flex items-center gap-2 ml-8">
-                                    <IconUsers className="h-4 w-4 text-muted-foreground" />
-                                    <span>{event.current_bookings}/{event.max_capacity}</span>
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <IconUsers className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                    <span className="tabular-nums">{event.current_bookings}/{event.max_capacity}</span>
                                   </div>
                                 </div>
 

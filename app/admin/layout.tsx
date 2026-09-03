@@ -12,9 +12,9 @@ export default function AdminLayout({
       <SidebarProvider>
         <div className="flex min-h-screen w-full">
           <AdminSidebar />
-          <main className="flex-1 overflow-auto">
-            <div className="sticky top-0 z-40 bg-background border-b lg:hidden p-4">
-              <SidebarTrigger />
+          <main className="flex-1 min-w-0 overflow-x-hidden">
+            <div className="sticky top-0 z-40 bg-background border-b md:hidden p-3">
+              <SidebarTrigger className="h-11 w-11" />
             </div>
             {children}
           </main>

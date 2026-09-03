@@ -71,7 +71,7 @@ export function PlanRequestCard({ request, onUpdate, compact = false }: PlanRequ
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h4 className="font-medium text-sm text-foreground truncate">{request.plan.name}</h4>
+                <h4 className="min-w-0 flex-1 font-medium text-sm text-foreground truncate">{request.plan.name}</h4>
                 <Badge className="bg-foreground text-background text-xs">
                   {statusInfo.label}
                 </Badge>
@@ -87,9 +87,10 @@ export function PlanRequestCard({ request, onUpdate, compact = false }: PlanRequ
                   variant="outline"
                   onClick={handleDelete}
                   disabled={isLoading}
-                  className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background"
+                  
                 >
-                  <IconTrash className="h-3 w-3" />
+                  <IconTrash className="h-4 w-4" />
+                  <span className="sr-only">Supprimer la demande</span>
                 </Button>
               </div>
             )}
@@ -105,7 +106,7 @@ export function PlanRequestCard({ request, onUpdate, compact = false }: PlanRequ
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <CardTitle className="text-base sm:text-lg text-foreground truncate">{request.plan.name}</CardTitle>
+              <CardTitle className="min-w-0 flex-1 text-base sm:text-lg text-foreground truncate">{request.plan.name}</CardTitle>
               <Badge className="bg-foreground text-background text-xs">
                 {statusInfo.label}
               </Badge>
@@ -130,7 +131,7 @@ export function PlanRequestCard({ request, onUpdate, compact = false }: PlanRequ
                 variant="outline"
                 onClick={handleDelete}
                 disabled={isLoading}
-                className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background"
+                
               >
                 <IconTrash className="h-4 w-4" />
               </Button>

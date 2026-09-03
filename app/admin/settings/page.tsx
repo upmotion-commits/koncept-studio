@@ -340,7 +340,7 @@ export default function AdminSettingsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex-1 space-y-8 p-8">
+      <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Paramètres Administrateur</h1>
@@ -358,7 +358,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-8 p-8">
+    <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div>
@@ -428,15 +428,17 @@ export default function AdminSettingsPage() {
 
       {/* Settings Tabs */}
       <Tabs defaultValue={settingsGroups[0]?.category} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-1">
+        {/* Mobile: horizontally scrollable strip with visible labels.
+            Desktop: the original 7-column grid. */}
+        <TabsList className="flex w-full h-auto justify-start gap-1 overflow-x-auto lg:grid lg:grid-cols-7">
           {settingsGroups.map((group) => (
             <TabsTrigger
               key={group.category}
               value={group.category}
-              className="flex items-center justify-center space-x-1 text-xs sm:text-sm px-1 sm:px-2 py-2 min-w-0"
+              className="flex shrink-0 items-center justify-center gap-1.5 text-xs sm:text-sm px-3 py-2.5 min-h-[44px] lg:min-w-0"
             >
               {getTabIcon(group.category)}
-              <span className="hidden sm:inline truncate">
+              <span className="lg:truncate">
                 {SettingsService.getCategoryDisplayName(group.category)}
               </span>
             </TabsTrigger>

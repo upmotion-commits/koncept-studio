@@ -142,7 +142,7 @@ export default function Navbar() {
     return (
       <nav className="bg-background/95 backdrop-blur-md border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between h-18 lg:h-20">
+          <div className="flex justify-between h-16 lg:h-20">
             <div className="flex items-center">
               <Link href="/" className="text-xl font-bold text-primary hover:text-primary/80 transition-colors">
                 Koncept Studio
@@ -315,7 +315,7 @@ export default function Navbar() {
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-primary/10 transition-colors">
+                  <Button variant="ghost" aria-label="Menu du compte" className="relative h-11 w-11 rounded-full hover:bg-primary/10 transition-colors">
                     <Avatar className="h-10 w-10 shadow-soft">
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                         {(profile.full_name || user?.email || '').charAt(0).toUpperCase()}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,19 +13,14 @@ import { Label } from '@/components/ui/label'
 import {
   IconSearch,
   IconFilter,
+  IconX,
   IconRefresh,
   IconUserPlus,
-  IconPhone,
   IconCheck,
-  IconX,
   IconClock,
   IconUser,
-  IconCurrencyDollar,
-  IconCalendar,
-  IconNote,
   IconAlertTriangle,
   IconEye,
-  IconUsers,
   IconActivity,
   IconFileText,
   IconDownload,
@@ -224,15 +219,6 @@ export default function AdminSubscriptionRequestsPage() {
     return diffDays <= 3 && diffDays > 0
   }
 
-  const handleStatusUpdate = async (requestId: string, newStatus: string) => {
-    try {
-      // TODO: Implement API call
-      toast.success('Statut mis à jour')
-      loadRequests()
-    } catch (error) {
-      toast.error('Erreur lors de la mise à jour')
-    }
-  }
 
   const handleAssignRequest = (request: AdminSubscriptionRequest) => {
     setSelectedRequest(request)
@@ -298,11 +284,11 @@ export default function AdminSubscriptionRequestsPage() {
   }
 
   return (
-    <div className="container mx-auto px-6 py-8 space-y-8">
+    <div className="container mx-auto p-4 sm:p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Demandes d'Abonnement</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Demandes d'abonnement</h1>
           <p className="text-muted-foreground">
             Gérez et suivez les demandes d'abonnement en attente
           </p>
@@ -311,14 +297,14 @@ export default function AdminSubscriptionRequestsPage() {
           <Button
             onClick={handleExport}
             variant="outline"
-            className="gap-2"
+            size="sm"
             disabled={filteredRequests.length === 0}
           >
-            <IconDownload className="h-4 w-4" />
+            <IconDownload className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button onClick={loadRequests} variant="outline" className="gap-2">
-            <IconRefresh className="h-4 w-4" />
+          <Button onClick={loadRequests} variant="outline" size="sm">
+            <IconRefresh className="h-4 w-4 mr-2" />
             Actualiser
           </Button>
         </div>
@@ -326,52 +312,44 @@ export default function AdminSubscriptionRequestsPage() {
 
       {/* Statistics Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <IconFileText className="h-8 w-8 text-foreground" />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total</CardTitle>
+              <IconFileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.total}</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <IconClock className="h-8 w-8 text-foreground" />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">En attente</p>
-                  <p className="text-2xl font-bold">{stats.pending}</p>
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">En attente</CardTitle>
+              <IconClock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.pending}</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <IconCheck className="h-8 w-8 text-foreground" />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Traités</p>
-                  <p className="text-2xl font-bold">{stats.fulfilled}</p>
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Traités</CardTitle>
+              <IconCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.fulfilled}</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <IconActivity className="h-8 w-8 text-foreground" />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Taux conversion</p>
-                  <p className="text-2xl font-bold">{stats.conversionRate}%</p>
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Taux conversion</CardTitle>
+              <IconActivity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.conversionRate}%</div>
             </CardContent>
           </Card>
         </div>
@@ -457,10 +435,9 @@ export default function AdminSubscriptionRequestsPage() {
                 setDebouncedSearchTerm('')
                 setSubscriptionTypeFilter([])
               }}
-              className="gap-2"
             >
-              <IconFilter className="h-4 w-4" />
-              Réinitialiser
+              <IconX className="h-4 w-4 mr-2" />
+              Effacer
             </Button>
           </div>
         </CardContent>
@@ -479,12 +456,12 @@ export default function AdminSubscriptionRequestsPage() {
               const expiringSoon = isExpiringSoon(request.expiresAt)
 
               return (
-                <Card key={request.id} className={`transition-all hover:shadow-md ${expiringSoon ? 'border-amber-200 bg-amber-50/50' : ''}`}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-lg">{request.userName}</h4>
+                <Card key={request.id} className={`transition-all hover:shadow-md ${expiringSoon ? 'border-destructive/40 bg-destructive/5' : ''}`}>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="font-medium text-lg break-words">{request.userName}</h4>
                           <Badge variant="outline" className={statusInfo.color}>
                             {statusInfo.label}
                           </Badge>
@@ -499,7 +476,7 @@ export default function AdminSubscriptionRequestsPage() {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
                           <div>
                             <span className="text-muted-foreground">Plan:</span>
                             <div className="font-medium">{request.planName}</div>
@@ -510,7 +487,7 @@ export default function AdminSubscriptionRequestsPage() {
                           </div>
                           <div>
                             <span className="text-muted-foreground">Email:</span>
-                            <div className="font-medium text-xs break-all">{request.userEmail}</div>
+                            <div className="font-medium text-xs break-words">{request.userEmail}</div>
                           </div>
                           <div>
                             <span className="text-muted-foreground">
@@ -533,10 +510,11 @@ export default function AdminSubscriptionRequestsPage() {
 
                       </div>
 
-                      <div className="flex gap-2 ml-4">
+                      <div className="flex shrink-0 gap-2 border-t pt-3 sm:border-0 sm:pt-0 sm:ml-4">
                         <Button
                           size="sm"
                           variant="outline"
+                          className="h-11 w-11 sm:h-9 sm:w-9 p-0"
                           onClick={() => {
                             setSelectedRequest(request)
                             setShowDetailsModal(true)
@@ -544,25 +522,29 @@ export default function AdminSubscriptionRequestsPage() {
                           title="Voir les détails"
                         >
                           <IconEye className="h-4 w-4" />
+                          <span className="sr-only">Voir les détails</span>
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
+                          className="h-11 w-11 sm:h-9 sm:w-9 p-0"
                           onClick={() => handleAssignRequest(request)}
                           disabled={request.status === 'fulfilled'}
                           title={request.status === 'fulfilled' ? 'Déjà traité' : 'Assigner abonnement'}
                         >
                           <IconUserPlus className="h-4 w-4" />
+                          <span className="sr-only">Assigner un abonnement</span>
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="destructive"
+                          className="h-11 w-11 sm:h-9 sm:w-9 p-0"
                           onClick={() => handleShowDeleteConfirmation(request)}
                           disabled={request.status === 'fulfilled'}
                           title={request.status === 'fulfilled' ? 'Impossible de supprimer une demande traitée' : 'Supprimer la demande'}
-                          className="border-foreground text-foreground hover:bg-foreground hover:text-background"
                         >
                           <IconTrash className="h-4 w-4" />
+                          <span className="sr-only">Supprimer la demande</span>
                         </Button>
                       </div>
                     </div>
@@ -603,9 +585,6 @@ export default function AdminSubscriptionRequestsPage() {
                   <IconChevronLeft className="h-4 w-4" />
                   Précédent
                 </Button>
-                <span className="text-sm text-muted-foreground px-2">
-                  {currentPage}/{totalPages}
-                </span>
                 <Button
                   variant="outline"
                   size="sm"
@@ -630,7 +609,7 @@ export default function AdminSubscriptionRequestsPage() {
           </DialogHeader>
           {selectedRequest && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Utilisateur</Label>
                   <p className="font-medium">{selectedRequest.userName}</p>

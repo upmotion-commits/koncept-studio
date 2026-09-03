@@ -191,7 +191,7 @@ export function AdminSidebar() {
   }, [supabase])
 
   return (
-    <Sidebar className="border-r h-screen flex flex-col">
+    <Sidebar className="border-r h-svh flex flex-col">
       <SidebarHeader className="border-b px-6 py-4 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Image
@@ -208,7 +208,7 @@ export function AdminSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="flex-1 flex flex-col px-3 pt-2 pb-4 overflow-hidden">
+      <SidebarContent className="flex-1 flex flex-col px-3 pt-2 pb-4 overflow-y-auto">
         <div className="flex flex-col flex-1">
           <SidebarMenu className="space-y-1 flex-1">
             {navigation.slice(0, -1).map((item) => (

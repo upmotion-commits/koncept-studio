@@ -501,7 +501,7 @@ export default function CalendarPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cours - {stats.periodLabel.replace(/(\b\w)/g, (c) => c.toUpperCase())}</CardTitle>
+            <CardTitle className="text-sm font-medium">Cours - {stats.periodLabel}</CardTitle>
             <IconCalendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -511,7 +511,7 @@ export default function CalendarPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Réservations - {stats.periodLabel.replace(/(\b\w)/g, (c) => c.toUpperCase())}</CardTitle>
+            <CardTitle className="text-sm font-medium">Réservations - {stats.periodLabel}</CardTitle>
             <IconUsers className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -522,7 +522,7 @@ export default function CalendarPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Annulations - {stats.periodLabel.replace(/(\b\w)/g, (c) => c.toUpperCase())}</CardTitle>
+            <CardTitle className="text-sm font-medium">Annulations - {stats.periodLabel}</CardTitle>
             <IconClock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>

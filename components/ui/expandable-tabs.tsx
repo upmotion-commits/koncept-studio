@@ -55,7 +55,8 @@ export function ExpandableTabs({
   );
 
   return (
-    <div
+    <nav
+      aria-label="Navigation de l'espace membre"
       className={cn(
         "flex items-center gap-2 w-full",
         className
@@ -71,11 +72,15 @@ export function ExpandableTabs({
         const isActive = selected === index;
 
         return (
-          <motion.div
+          <motion.button
             key={`tab-${index}-${tabItem.title}`}
+            type="button"
             layout
+            aria-current={isActive ? "page" : undefined}
+            aria-label={tabItem.title}
             className={cn(
               "flex items-center justify-center rounded-xl cursor-pointer overflow-hidden h-[44px] relative",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               isActive
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "bg-muted/60 hover:bg-muted/80 text-muted-foreground hover:text-foreground"
@@ -119,9 +124,9 @@ export function ExpandableTabs({
                 )}
               </AnimatePresence>
             </motion.div>
-          </motion.div>
+          </motion.button>
         );
       })}
-    </div>
+    </nav>
   );
 }

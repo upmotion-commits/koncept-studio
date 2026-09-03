@@ -235,7 +235,7 @@ export default function SubscriptionPlansPage() {
 
   if (loading && plans.length === 0) {
     return (
-      <div className="flex-1 space-y-8 p-8">
+      <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Forfaits</h1>
@@ -252,10 +252,10 @@ export default function SubscriptionPlansPage() {
   }
 
   return (
-    <div className="flex-1 space-y-8 p-8">
-      <div className="flex items-center justify-between">
+    <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Forfaits</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Forfaits</h1>
           <p className="text-muted-foreground mt-2">
             Gérer les formules d'abonnement et les tarifs
           </p>
@@ -275,7 +275,7 @@ export default function SubscriptionPlansPage() {
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nom du Forfait</Label>
                   <Input
@@ -301,7 +301,7 @@ export default function SubscriptionPlansPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="price_dhs">Prix (DHS)</Label>
                   <Input
@@ -395,11 +395,11 @@ export default function SubscriptionPlansPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nom</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead className="hidden sm:table-cell">Type</TableHead>
                   <TableHead>Prix</TableHead>
-                  <TableHead>Crédits</TableHead>
-                  <TableHead>Durée</TableHead>
-                  <TableHead>Crédits/Semaine</TableHead>
+                  <TableHead className="hidden md:table-cell">Crédits</TableHead>
+                  <TableHead className="hidden lg:table-cell">Durée</TableHead>
+                  <TableHead className="hidden lg:table-cell">Crédits/Semaine</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -409,7 +409,7 @@ export default function SubscriptionPlansPage() {
                     <TableCell>
                       <div className="font-medium">{plan.name}</div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Badge variant="secondary">
                         {getTypeLabel(plan.type)}
                       </Badge>
@@ -419,17 +419,17 @@ export default function SubscriptionPlansPage() {
                         {plan.price_dhs} DHS
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <span className="font-medium">
                         {plan.type === 'abonnement' ? 'Illimité' : plan.credits}
                       </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <span className="font-medium">
                         {plan.validity_months} mois
                       </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       {plan.weekly_limit ? (
                         <span className="font-medium">
                           {plan.weekly_limit} crédits

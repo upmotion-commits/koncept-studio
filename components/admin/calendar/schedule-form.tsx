@@ -378,7 +378,7 @@ export function ScheduleForm({ event, selectedDate, onClose }: ScheduleFormProps
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto space-y-6 px-4 pr-2">
+          <div className="flex-1 overflow-y-auto space-y-6 pr-2">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -411,7 +411,7 @@ export function ScheduleForm({ event, selectedDate, onClose }: ScheduleFormProps
           </div>
 
           {/* Date and Time */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="start_date">Date</Label>
               <Input

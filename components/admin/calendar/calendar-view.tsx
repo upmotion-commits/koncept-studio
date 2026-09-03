@@ -28,6 +28,10 @@ export type CalendarEvent = {
 
 export type CalendarViewType = 'day' | 'week' | 'month'
 
+/** Capitalise the first letter only. A previous /(\b\w)/g replace produced
+ *  "AoûT", because "û" is not a \w char so "t" started a new word. */
+const capitalise = (value: string) => value.charAt(0).toUpperCase() + value.slice(1)
+
 interface CalendarViewProps {
   events: CalendarEvent[]
   onEventClick?: (event: CalendarEvent) => void
@@ -161,6 +165,65 @@ export function CalendarView({
 
     return (
       <div className="space-y-4">
+        {/* Mobile: a day-grouped list. The 8-column grid gives each day ~35px
+            on a phone, which is unusable, so it is desktop-only below. */}
+        <div className="space-y-4 md:hidden">
+          {weekDays.every(day => getEventsForDate(day).length === 0) ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Aucun cours planifié cette semaine
+            </div>
+          ) : (
+            weekDays.map(day => {
+              const dayEvents = getEventsForDate(day).sort(
+                (a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime()
+              )
+              if (dayEvents.length === 0) return null
+
+              return (
+                <div key={day.toISOString()} className="space-y-2">
+                  <div className="flex items-center gap-2 sticky top-0 bg-background py-1">
+                    <span className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold",
+                      isToday(day) ? "bg-primary text-primary-foreground" : "bg-muted"
+                    )}>
+                      {format(day, 'd')}
+                    </span>
+                    <span className="text-sm font-medium">
+                      {capitalise(format(day, 'EEEE', { locale: fr }))}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {dayEvents.length} cours
+                    </span>
+                  </div>
+                  {dayEvents.map(event => (
+                    <Card
+                      key={event.id}
+                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => onEventClick?.(event)}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="font-medium truncate">{event.title}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {format(new Date(event.start_datetime), 'HH:mm')} - {format(new Date(event.end_datetime), 'HH:mm')} · {event.coach}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="shrink-0 tabular-nums">
+                            {event.current_bookings}/{event.max_capacity}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )
+            })
+          )}
+        </div>
+
+        {/* Desktop: the original hour x day grid */}
+        <div className="hidden md:block space-y-4">
         <div className="grid grid-cols-8 gap-1">
           <div className="w-20"></div>
           {weekDays.map(day => (
@@ -216,6 +279,7 @@ export function CalendarView({
             ))}
           </div>
         )}
+        </div>
       </div>
     )
   }
@@ -229,6 +293,58 @@ export function CalendarView({
 
     return (
       <div className="space-y-4">
+        {/* Mobile: a compact month grid. Full day cards need ~120px each and
+            only get ~48px on a phone, so here each day is a number with a
+            load indicator; tapping one opens that day. */}
+        <div className="md:hidden space-y-3">
+          <div className="grid grid-cols-7 gap-1">
+            {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, i) => (
+              <div key={i} className="text-center text-xs font-medium text-muted-foreground">
+                {day}
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {calendarDays.map(day => {
+              const dayEvents = getEventsForDate(day)
+              const isCurrentMonth = isSameMonth(day, currentDate)
+              return (
+                <button
+                  key={day.toISOString()}
+                  type="button"
+                  onClick={() => {
+                    setCurrentDate(day)
+                    onDateChange?.(day)
+                    handleViewChange('day')
+                  }}
+                  className={cn(
+                    "flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-md border border-transparent p-1 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    !isCurrentMonth && "opacity-40"
+                  )}
+                  aria-label={`${format(day, 'd MMMM', { locale: fr })} — ${dayEvents.length} cours`}
+                >
+                  <span className={cn(
+                    "flex h-6 w-6 items-center justify-center rounded-full text-sm tabular-nums",
+                    isToday(day) && "bg-primary text-primary-foreground font-semibold"
+                  )}>
+                    {format(day, 'd')}
+                  </span>
+                  {dayEvents.length > 0 && (
+                    <span className="text-[10px] font-medium leading-none text-primary tabular-nums">
+                      {dayEvents.length}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Touchez un jour pour voir le détail des cours.
+          </p>
+        </div>
+
+        {/* Desktop: the original month grid with event chips */}
+        <div className="hidden md:block space-y-4">
         <div className="grid grid-cols-7 gap-1">
           {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
             <div key={day} className="text-center p-2 font-medium text-muted-foreground">
@@ -282,6 +398,7 @@ export function CalendarView({
             )
           })}
         </div>
+        </div>
       </div>
     )
   }
@@ -289,27 +406,25 @@ export function CalendarView({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={handlePrevious}>
-              <IconChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleNext}>
-              <IconChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <h2 className="text-2xl font-bold">
-            {view === 'month' && format(currentDate, 'MMMM yyyy', { locale: fr }).replace(/^\w/, (c) => c.toUpperCase())}
-            {view === 'week' && `Semaine du ${format(startOfWeek(currentDate, { locale: fr }), 'd MMMM', { locale: fr }).replace(/(\b\w)/g, (c) => c.toUpperCase())}`}
-            {view === 'day' && format(currentDate, 'EEEE d MMMM yyyy', { locale: fr }).replace(/(\b\w)/g, (c) => c.toUpperCase())}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button variant="outline" size="sm" onClick={handlePrevious} aria-label="Période précédente">
+            <IconChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleNext} aria-label="Période suivante">
+            <IconChevronRight className="h-4 w-4" />
+          </Button>
+
+          <h2 className="min-w-0 truncate text-lg font-bold sm:text-xl lg:text-2xl">
+            {view === 'month' && capitalise(format(currentDate, 'MMMM yyyy', { locale: fr }))}
+            {view === 'week' && `Semaine du ${format(startOfWeek(currentDate, { locale: fr }), 'd MMMM', { locale: fr })}`}
+            {view === 'day' && capitalise(format(currentDate, 'EEEE d MMMM yyyy', { locale: fr }))}
           </h2>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <Select value={view} onValueChange={handleViewChange}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-28 sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -318,8 +433,8 @@ export function CalendarView({
               <SelectItem value="month">Mois</SelectItem>
             </SelectContent>
           </Select>
-          
-          <Button onClick={() => onCreateEvent?.(currentDate)}>
+
+          <Button className="flex-1 lg:flex-initial" onClick={() => onCreateEvent?.(currentDate)}>
             <IconPlus className="h-4 w-4 mr-2" />
             Planifier
           </Button>
@@ -328,7 +443,7 @@ export function CalendarView({
 
       {/* Calendar Content */}
       <div className="bg-background rounded-lg border">
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {view === 'day' && renderDayView()}
           {view === 'week' && renderWeekView()}
           {view === 'month' && renderMonthView()}

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import Link from 'next/link'
 import { format, differenceInDays, startOfWeek, endOfWeek } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { Button } from '@/components/ui/button'
@@ -92,16 +93,9 @@ export function UserSubscriptionView({
   subscriptionHistory,
   recentBookings
 }: UserSubscriptionViewProps) {
-  const [isLoading, setIsLoading] = useState(true)
-
-  // Simulate loading state for visual consistency
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [])
+  // The page that renders this view already shows its own spinner while it
+  // fetches; a second artificial delay here made users watch two in a row.
+  const [isLoading] = useState(false)
 
   // Sort subscriptions by type priority: Abonnement -> Carnet -> Personal training
   const getSortedSubscriptions = (subscriptions: Subscription[]) => {
@@ -142,7 +136,7 @@ export function UserSubscriptionView({
               <p className="text-sm">
                 Votre compte a été suspendu. Veuillez contacter le studio pour résoudre cette situation.
               </p>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <Button variant="outline" onClick={() => window.open('tel:0663235797')}>
                   Appeler le studio
                 </Button>
@@ -210,8 +204,8 @@ export function UserSubscriptionView({
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8 text-center sm:text-left">
-          <h1 className="text-3xl lg:text-4xl font-bold text-gradient mb-3">Mon abonnement</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-2">Mon abonnement</h1>
           <p className="text-muted-foreground text-sm sm:text-base">
             Gérez votre abonnement et consultez votre utilisation
           </p>
@@ -291,7 +285,7 @@ export function UserSubscriptionView({
                                 au {format(new Date(currentSubscription.end_date), 'dd/MM/yyyy', { locale: fr })}
                               </div>
                             </div>
-                            <div className="space-y-2 ml-8">
+                            <div className="space-y-2">
                               <div className="text-sm text-muted-foreground">Temps restant</div>
                               <div className="font-medium">
                                 {differenceInDays(new Date(currentSubscription.end_date), new Date())} jours
@@ -356,14 +350,11 @@ export function UserSubscriptionView({
                 <p className="text-sm mb-3">
                   Vous n'avez pas d'abonnement actif actuellement. Vous pouvez demander, gérer et suivre vos demandes d'abonnement dans la section "Mes demandes".
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.location.href = '/espace/subscriptions'}
-                  className="gap-2"
-                >
-                  <IconCreditCard className="h-4 w-4" />
-                  Aller à Mes demandes
+                <Button variant="outline" size="sm" asChild className="gap-2">
+                  <Link href="/espace/subscriptions">
+                    <IconCreditCard className="h-4 w-4" />
+                    Aller à Mes demandes
+                  </Link>
                 </Button>
               </AlertDescription>
             </Alert>

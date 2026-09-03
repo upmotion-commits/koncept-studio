@@ -228,9 +228,9 @@ export default function ClassesPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Cours</h1>
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold">Cours</h1>
         <Dialog open={showForm} onOpenChange={setShowForm}>
           <DialogTrigger asChild>
             <Button onClick={() => resetForm()}>
@@ -246,7 +246,7 @@ export default function ClassesPage() {
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Titre du Cours</Label>
                   <Input
@@ -279,7 +279,7 @@ export default function ClassesPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="duration">Durée (min)</Label>
                   <Input
@@ -370,10 +370,10 @@ export default function ClassesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Titre</TableHead>
-                  <TableHead>Coach</TableHead>
-                  <TableHead>Durée</TableHead>
-                  <TableHead>Lieu</TableHead>
-                  <TableHead>Difficulté</TableHead>
+                  <TableHead className="hidden md:table-cell">Coach</TableHead>
+                  <TableHead className="hidden lg:table-cell">Durée</TableHead>
+                  <TableHead className="hidden lg:table-cell">Lieu</TableHead>
+                  <TableHead className="hidden md:table-cell">Difficulté</TableHead>
                   <TableHead>Capacité</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -385,22 +385,22 @@ export default function ClassesPage() {
                       <div>
                         <div className="font-medium">{classItem.title}</div>
                         {classItem.description && (
-                          <div className="text-sm text-muted-foreground mt-1 truncate max-w-xs">
+                          <div className="text-sm text-muted-foreground mt-1 line-clamp-2 max-w-[16rem]">
                             {classItem.description}
                           </div>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <span className="font-medium">{classItem.coach}</span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <span className="font-medium">{classItem.duration} min</span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <span className="font-medium">{classItem.location}</span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <Badge variant="secondary">
                         {getDifficultyLabel(classItem.difficulty_level)}
                       </Badge>

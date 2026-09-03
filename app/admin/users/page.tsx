@@ -983,7 +983,7 @@ export default function UsersPage() {
 
   if (loading && users.length === 0) {
     return (
-      <div className="flex-1 space-y-8 p-8">
+      <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">Utilisateurs</h1>
@@ -1010,7 +1010,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="flex-1 space-y-8 p-8">
+    <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Utilisateurs</h1>
@@ -1199,11 +1199,11 @@ export default function UsersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nom</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Téléphone</TableHead>
-                  <TableHead>Plan Informé</TableHead>
+                  <TableHead className="hidden sm:table-cell">Email</TableHead>
+                  <TableHead className="hidden lg:table-cell">Téléphone</TableHead>
+                  <TableHead className="hidden xl:table-cell">Plan Informé</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Date d'inscription</TableHead>
+                  <TableHead className="hidden lg:table-cell">Date d'inscription</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1212,11 +1212,12 @@ export default function UsersPage() {
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="font-medium">{user.full_name}</div>
+                      <div className="text-xs text-muted-foreground sm:hidden break-all">{user.email}</div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <div className="text-sm">{user.email}</div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <div className="text-sm">
                         {user.phone ? (
                           <div className="flex items-center gap-1">
@@ -1228,7 +1229,7 @@ export default function UsersPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden xl:table-cell">
                       <div className="text-sm">
                         {user.has_subscription_request ? (
                           <Badge variant="secondary">Oui</Badge>
@@ -1240,7 +1241,7 @@ export default function UsersPage() {
                     <TableCell>
                       {getStatusBadge(user.subscription_status)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <div className="text-sm">
                         {format(new Date(user.created_at), 'dd/MM/yyyy', { locale: fr })}
                       </div>
@@ -1256,8 +1257,9 @@ export default function UsersPage() {
                             setShowSubscriptionManagementDialog(true)
                           }}
                         >
-                          <IconCreditCard className="h-4 w-4 mr-1" />
-                          Gérer abonnement
+                          <IconCreditCard className="h-4 w-4 sm:mr-1" />
+                          <span className="hidden sm:inline">Gérer abonnement</span>
+                          <span className="sr-only sm:hidden">Gérer abonnement</span>
                         </Button>
                       </div>
                     </TableCell>

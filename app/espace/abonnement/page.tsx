@@ -101,8 +101,8 @@ export default function UserSubscriptionPage() {
 
   if (isLoading || !profile) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+      <div className="min-h-screen bg-background p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto">
           <LoadingSpinner message="Chargement de votre abonnement" />
         </div>
       </div>
