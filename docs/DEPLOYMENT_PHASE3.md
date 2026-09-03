@@ -70,12 +70,22 @@ Merge this branch. Verify on production:
   `select * from waitlist_promotion_notices order by promoted_at desc limit 5;`
   — the row must have a `notified_at`.
 
-**Check the new cron is accepted.** `vercel.json` schedules
-`/api/cron/waitlist-promotions` every 15 minutes. If the Vercel plan rejects
-that frequency the deploy will say so — change the schedule to something the
-plan allows (even daily is fine). It is only a backstop: the member who
-cancels triggers delivery immediately, and the cron exists for the cases that
-path cannot cover (closed tab, dropped connection, Wasender outage).
+**No new cron job is added.** The Hobby plan caps both the number of cron
+jobs and how often they run, so the daily sweep for undelivered promotion
+notices is folded into the existing `/api/cron/cleanup-waitlist` (17:59) —
+`vercel.json` is unchanged from what already deploys. The dedicated route
+`/api/cron/waitlist-promotions` still exists for a manual trigger:
+
+```
+curl -X POST -H "Authorization: Bearer $CRON_SECRET" \
+  https://<your-domain>/api/cron/waitlist-promotions
+```
+
+On a Pro plan, schedule that path every 15 minutes and the sweep becomes
+near-real-time. Either way the common case never reaches a cron: the member
+who cancels delivers the notice in the same second. The sweep only covers a
+closed tab, a dropped connection, or a Wasender outage — worst case, the
+notice waits until the next daily run.
 
 ## 4. Run the lockdown migration (after the deploy is verified)
 
@@ -108,7 +118,8 @@ user could call in a loop to self-grant credits). Do not skip or delay it.
   row in `waitlist_promotion_notices` inside the same transaction that grants
   the place, and a service-role worker sends the WhatsApp — so the message no
   longer depends on the cancelling member's browser staying open, or on that
-  member being allowed to read the promoted member's profile. The message names
+  member being allowed to read the promoted member's profile. The daily
+  `cleanup-waitlist` cron re-runs the worker for anything left queued. The message names
   the class, its date and its time; before, it said only "your place is
   confirmed", which a member on several waitlists could not act on.
   Undelivered notices are visible to admins in the table, with `attempts` and

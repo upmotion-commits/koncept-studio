@@ -145,8 +145,10 @@ and the accompanying application change:
    dropped connection or a thrown action lost it permanently while the
    promotion stood. The promotion now writes a row in
    `waitlist_promotion_notices` in the same transaction that grants the place,
-   and a service-role worker delivers it — with a 15-minute cron backstop and
-   bounded retries.
+   and a service-role worker delivers it, with bounded retries. The daily
+   `cleanup-waitlist` cron re-runs the worker for anything still queued; no
+   new cron job was added, because the Hobby plan caps both their number and
+   their frequency.
 3. **The send ran with the wrong identity.** The old server action read the
    *promoted* member's profile using the *cancelling* member's session — the
    only cross-user profile read in the whole codebase; every other one is
