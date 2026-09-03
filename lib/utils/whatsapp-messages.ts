@@ -76,18 +76,54 @@ L'équipe Koncept Studio 💪`
 }
 
 /**
- * Generate waitlist promotion WhatsApp message
+ * Generate waitlist promotion WhatsApp message.
+ *
+ * The class is named whenever we know it: a member can be on several
+ * waitlists at once, and "your place is confirmed" alone does not tell them
+ * which class they just got. `className`/`startIso` are optional only so a
+ * missing schedule can never block the notification.
  */
-export function generateWaitlistPromotionMessage(user: UserProfile): string {
+export function generateWaitlistPromotionMessage(
+  user: UserProfile,
+  className?: string | null,
+  startIso?: string | null
+): string {
   const name = user.full_name || 'Cher membre'
+
+  let classLines = ''
+  if (className && startIso) {
+    const start = new Date(startIso)
+    const date = new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'Africa/Casablanca',
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+    }).format(start)
+    const time = new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'Africa/Casablanca',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(start)
+
+    classLines = `
+📅 *Cours:* ${className}
+🕒 *Date et heure:* ${date} à ${time}
+`
+  } else if (className) {
+    classLines = `
+📅 *Cours:* ${className}
+`
+  }
 
   return `🎊 *Bonne nouvelle !*
 
 Bonjour ${name},
 
-Vous avez été promu(e) de la liste d'attente !
-
+Une place s'est libérée et vous avez été promu(e) de la liste d'attente.
+${classLines}
 ✨ *Votre place est maintenant confirmée.*
+
+Si vous ne pouvez plus venir, annulez au plus tard 3 heures avant le début du cours pour récupérer votre séance.
 
 📞 *Questions ?* Contactez-nous au ${formatPhoneNumber(APP_CONFIG.CONTACT.PHONE)}
 

@@ -34,12 +34,21 @@ export class WhatsAppService {
   private wasenderApiKey: string
   private wasenderBaseUrl: string
   private useServerClient: boolean
+  private useAdminClient: boolean
 
-  constructor(useServerClient: boolean = false) {
+  /**
+   * @param useServerClient  read/write logs with the caller's server session
+   * @param useAdminClient   read/write logs with the service role — required
+   *                         for crons and background workers, which have no
+   *                         session and would otherwise hit RLS on
+   *                         whatsapp_logs and lose the audit trail.
+   */
+  constructor(useServerClient: boolean = false, useAdminClient: boolean = false) {
     // Ensure required environment variables are present
     this.wasenderApiKey = process.env.WASENDER_API_KEY || ''
     this.wasenderBaseUrl = process.env.WASENDER_BASE_URL || 'https://wasenderapi.com/api'
     this.useServerClient = useServerClient
+    this.useAdminClient = useAdminClient
 
     if (!this.wasenderApiKey) {
       console.error('Missing required Wasender environment variables')
@@ -47,6 +56,10 @@ export class WhatsAppService {
   }
 
   private async getSupabase() {
+    if (this.useAdminClient) {
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      return createAdminClient()
+    }
     if (this.useServerClient) {
       const { createClient: createServerClient } = await import('@/lib/supabase/server')
       return await createServerClient()

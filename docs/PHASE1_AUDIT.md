@@ -120,4 +120,42 @@ See `docs/DEPLOYMENT_PHASE3.md` for the run order. Summary of changes:
   settings deadline values 24/1 → 3/3.
 - Regression tests: `docs/audit/phase3-validation.sql` (transactional, always
   rolls back) covering booking/capacity/waitlist/refund/promotion/no-show,
-  plus 3 read-only production invariants.
+  plus 4 read-only production invariants.
+
+## Waitlist promotion notifications (2026-09-03)
+
+Asked whether a WhatsApp goes out when someone is promoted from the waitlist.
+The code existed on all three promotion paths, but production had sent **7
+promotion messages in 11 months** (6 delivered, 1 refused by Wasender for a
+past-due account) — and all of them arrived in bursts of 4 and 2 within
+seconds of each other, i.e. an admin clicking through a list. Member-triggered
+auto-promotion had produced at most one notification ever, against 765
+cancellations.
+
+Three defects, all fixed in `20260903120000_waitlist_promotion_notices.sql`
+and the accompanying application change:
+
+1. **The message named no class.** `generateWaitlistPromotionMessage(user)`
+   took only the member: "your place is now confirmed", with no class, date or
+   time. A member on several waitlists could not tell what they had been given.
+   It now names all three (Africa/Casablanca), like the cancellation message
+   always did.
+2. **Delivery depended on the cancelling member's browser.** The notification
+   was fired client-side after `cancel_booking_v2` returned. A closed tab, a
+   dropped connection or a thrown action lost it permanently while the
+   promotion stood. The promotion now writes a row in
+   `waitlist_promotion_notices` in the same transaction that grants the place,
+   and a service-role worker delivers it — with a 15-minute cron backstop and
+   bounded retries.
+3. **The send ran with the wrong identity.** The old server action read the
+   *promoted* member's profile using the *cancelling* member's session — the
+   only cross-user profile read in the whole codebase; every other one is
+   `.eq('id', user.id)`. If `profiles` SELECT is self-only it returned nothing
+   and the send was skipped silently, which fits the 7 messages exactly. The
+   worker uses the service role, so the outcome no longer depends on that
+   policy either way.
+
+Also fixed while in the area: the J−7 expiry cron logged its WhatsApp sends
+with a caller-scoped client, but a cron has no session, so those log writes
+were made as `anon` and would have been dropped by RLS. It now logs with the
+service role.

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { whatsappServerService } from '@/lib/services/server'
+import { whatsappAdminService } from '@/lib/services/server'
 import { generateSubscriptionExpiryMessage } from '@/lib/utils/whatsapp-messages'
 
 const NOTIFICATION_TYPE = 'expiry_7d'
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const message = generateSubscriptionExpiryMessage(profile, plan?.name || 'Votre abonnement', sub.end_date)
-        await whatsappServerService.sendMessage({
+        await whatsappAdminService.sendMessage({
           phoneNumber: profile.phone,
           message,
           eventType: 'subscription_expiring',
@@ -82,7 +82,9 @@ export async function POST(request: NextRequest) {
         console.error(`❌ WhatsApp expiry notification failed for user ${sub.user_id}:`, sendError)
         // The claim stays in place: the send failure is visible in
         // whatsapp_logs (status=failed) for the admin to follow up, and the
-        // user is not spammed on the next runs.
+        // user is not spammed on the next runs. The log is written with the
+        // service role — a cron has no session, so the caller-scoped client
+        // would have been blocked by RLS and the failure left no trace.
         failed++
       }
     }

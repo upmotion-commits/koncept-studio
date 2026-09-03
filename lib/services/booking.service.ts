@@ -94,11 +94,14 @@ export class BookingService {
         return { success: false, error: result?.message || "Échec de l'annulation" }
       }
 
-      // Notify the promoted user (if the cancellation freed a spot)
+      // Nudge the promotion notice out now. The notice itself was committed
+      // by cancel_booking_v2 with the promoted booking, so if this call never
+      // lands (tab closed, connection dropped) the cron still delivers it —
+      // failing here never loses the notification.
       if (result.promoted_user_id) {
         try {
-          const { sendWaitlistPromotionNotification } = await import('@/app/espace/reservations/actions')
-          await sendWaitlistPromotionNotification(result.promoted_user_id)
+          const { flushWaitlistPromotionNotices } = await import('@/app/espace/reservations/actions')
+          await flushWaitlistPromotionNotices()
         } catch (notifyError) {
           console.error('Erreur lors de la notification de promotion:', notifyError)
         }

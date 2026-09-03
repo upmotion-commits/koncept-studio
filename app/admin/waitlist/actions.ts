@@ -1,8 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { whatsappServerService } from '@/lib/services/server'
-import { generateWaitlistPromotionMessage } from '@/lib/utils/whatsapp-messages'
+import { deliverPendingWaitlistPromotions } from '@/lib/services/waitlist-promotion-notifier'
 
 export async function promoteFromWaitlist(waitlistEntryId: string): Promise<{ success: boolean; error?: string }> {
   try {
@@ -109,20 +108,23 @@ export async function promoteFromWaitlist(waitlistEntryId: string): Promise<{ su
     // joining the waitlist; deducting again on promotion double-charged them
     // (verified in the production audit).
 
-    // Send WhatsApp notification if user has phone number
-    if (user.phone) {
+    // Queue the notification, then deliver it. Enqueuing goes through a
+    // SECURITY DEFINER function that re-checks the admin role and that the
+    // member really holds a confirmed place, so this cannot be used to send a
+    // WhatsApp to an arbitrary user id. If delivery fails here the notice
+    // stays queued and the cron retries it.
+    const { data: enqueued, error: enqueueError } = await supabase.rpc(
+      'enqueue_waitlist_promotion_notice',
+      { p_user_id: user.id, p_schedule_id: schedule.id }
+    )
+
+    if (enqueueError || !(enqueued as any)?.success) {
+      console.error('Could not queue waitlist promotion notice:', enqueueError || enqueued)
+    } else {
       try {
-        const message = generateWaitlistPromotionMessage(user)
-        await whatsappServerService.sendMessage({
-          phoneNumber: user.phone,
-          message,
-          eventType: 'waitlist_promotion',
-          userId: user.id
-        })
-        console.log('WhatsApp waitlist promotion notification sent successfully')
+        await deliverPendingWaitlistPromotions()
       } catch (error) {
-        console.error('Error sending WhatsApp waitlist promotion notification:', error)
-        // Don't fail the process if WhatsApp fails
+        console.error('Waitlist promotion notice queued but not yet delivered:', error)
       }
     }
 
@@ -243,20 +245,23 @@ export async function forcePromoteFromWaitlist(waitlistEntryId: string): Promise
     // joining the waitlist; deducting again on promotion double-charged them
     // (verified in the production audit).
 
-    // Send WhatsApp notification if user has phone number
-    if (user.phone) {
+    // Queue the notification, then deliver it. Enqueuing goes through a
+    // SECURITY DEFINER function that re-checks the admin role and that the
+    // member really holds a confirmed place, so this cannot be used to send a
+    // WhatsApp to an arbitrary user id. If delivery fails here the notice
+    // stays queued and the cron retries it.
+    const { data: enqueued, error: enqueueError } = await supabase.rpc(
+      'enqueue_waitlist_promotion_notice',
+      { p_user_id: user.id, p_schedule_id: schedule.id }
+    )
+
+    if (enqueueError || !(enqueued as any)?.success) {
+      console.error('Could not queue waitlist promotion notice:', enqueueError || enqueued)
+    } else {
       try {
-        const message = generateWaitlistPromotionMessage(user)
-        await whatsappServerService.sendMessage({
-          phoneNumber: user.phone,
-          message,
-          eventType: 'waitlist_promotion',
-          userId: user.id
-        })
-        console.log('WhatsApp force promotion notification sent successfully')
+        await deliverPendingWaitlistPromotions()
       } catch (error) {
-        console.error('Error sending WhatsApp force promotion notification:', error)
-        // Don't fail the process if WhatsApp fails
+        console.error('Waitlist promotion notice queued but not yet delivered:', error)
       }
     }
 

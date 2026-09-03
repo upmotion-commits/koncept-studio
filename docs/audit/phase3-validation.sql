@@ -1,6 +1,7 @@
 -- ============================================================================
 -- PHASE 3 — VALIDATION / REGRESSION TESTS
--- Run in the Supabase SQL Editor AFTER 20260830100000_phase3_core.sql.
+-- Run in the Supabase SQL Editor AFTER 20260830100000_phase3_core.sql and
+-- 20260903120000_waitlist_promotion_notices.sql.
 --
 -- Section A executes real end-to-end scenarios (booking, capacity, waitlist,
 -- refunds, promotion, no-show penalties) inside ONE transaction that is ALWAYS
@@ -35,11 +36,15 @@ BEGIN
   SELECT id INTO v_admin FROM profiles WHERE role = 'admin' LIMIT 1;
   IF v_admin IS NULL THEN RAISE EXCEPTION 'FIXTURE: no admin profile found'; END IF;
 
-  -- three distinct users holding an active abonnement with weekly room
+  -- Three distinct NON-ADMIN users holding an active abonnement with weekly
+  -- room. The role filter matters: a staff account with a real abonnement
+  -- would otherwise be picked as a "member" fixture and silently pass the
+  -- authorization tests below.
   SELECT us.user_id, us.id AS sub_id, us.weekly_credits_used
   INTO v_user_a
   FROM user_subscriptions us
   JOIN subscription_plans sp ON sp.id = us.plan_id
+  JOIN profiles pr ON pr.id = us.user_id AND pr.role <> 'admin'
   WHERE us.status = 'active' AND us.end_date > now() + interval '3 days'
     AND sp.type = 'abonnement' AND us.weekly_credits_used < sp.weekly_limit
     AND (SELECT count(*) FROM user_subscriptions x
@@ -50,6 +55,7 @@ BEGIN
   INTO v_user_b
   FROM user_subscriptions us
   JOIN subscription_plans sp ON sp.id = us.plan_id
+  JOIN profiles pr ON pr.id = us.user_id AND pr.role <> 'admin'
   WHERE us.status = 'active' AND us.end_date > now() + interval '3 days'
     AND sp.type = 'abonnement' AND us.weekly_credits_used < sp.weekly_limit
     AND (SELECT count(*) FROM user_subscriptions x
@@ -61,6 +67,7 @@ BEGIN
   INTO v_user_c
   FROM user_subscriptions us
   JOIN subscription_plans sp ON sp.id = us.plan_id
+  JOIN profiles pr ON pr.id = us.user_id AND pr.role <> 'admin'
   WHERE us.status = 'active' AND us.end_date > now() + interval '3 days'
     AND sp.type = 'abonnement' AND us.weekly_credits_used < sp.weekly_limit
     AND (SELECT count(*) FROM user_subscriptions x
@@ -69,7 +76,7 @@ BEGIN
   ORDER BY us.created_at LIMIT 1;
 
   IF v_user_c.user_id IS NULL THEN
-    RAISE EXCEPTION 'FIXTURE: need 3 users with active abonnement and weekly room';
+    RAISE EXCEPTION 'FIXTURE: need 3 non-admin users with active abonnement and weekly room';
   END IF;
 
   INSERT INTO classes (title, description, duration, max_capacity, coach, location, difficulty_level)
@@ -155,6 +162,27 @@ BEGIN
     RAISE EXCEPTION 'T5 FAILED: promoted booking missing';
   END IF;
 
+  -- T5b: the promotion must have queued a notice, in this same transaction,
+  -- pointing at the promoted booking and still undelivered.
+  IF NOT EXISTS (
+    SELECT 1 FROM waitlist_promotion_notices n
+     WHERE n.user_id = v_user_c.user_id
+       AND n.schedule_id = v_sched
+       AND n.notified_at IS NULL
+       AND n.claimed_at IS NULL
+       AND n.attempts = 0
+       AND n.booking_id = (SELECT id FROM class_bookings
+                            WHERE schedule_id = v_sched
+                              AND user_id = v_user_c.user_id
+                              AND status = 'confirmed')
+  ) THEN
+    RAISE EXCEPTION 'T5b FAILED: promotion did not queue a notice for the promoted member';
+  END IF;
+  IF (SELECT count(*) FROM waitlist_promotion_notices
+       WHERE schedule_id = v_sched) <> 1 THEN
+    RAISE EXCEPTION 'T5b FAILED: expected exactly one notice for this class';
+  END IF;
+
   -- ------------------------------------------------- T6: cancel deadline (3h) enforced server-side
   INSERT INTO class_schedules (class_id, start_datetime, end_datetime)
   VALUES (v_class, now() + interval '90 minutes', now() + interval '135 minutes')
@@ -229,6 +257,29 @@ BEGIN
   v_after := (SELECT weekly_credits_used FROM user_subscriptions WHERE id = v_user_c.sub_id);
   IF v_after <> v_before THEN RAISE EXCEPTION 'T9 FAILED: leave did not refund the join credit'; END IF;
 
+  -- ------------------------------------------- T10: notice enqueue is admin-only
+  -- A member must not be able to make the studio WhatsApp an arbitrary user.
+  PERFORM set_config('request.jwt.claims',
+    json_build_object('sub', v_user_a.user_id, 'role', 'authenticated')::text, true);
+  v_r := public.enqueue_waitlist_promotion_notice(v_user_b.user_id, v_sched, NULL);
+  IF (v_r->>'success')::boolean THEN
+    RAISE EXCEPTION 'T10 FAILED: a non-admin could queue a promotion notice';
+  END IF;
+  IF v_r->>'reason' <> 'not_admin' THEN
+    RAISE EXCEPTION 'T10 FAILED: wrong refusal reason: %', v_r;
+  END IF;
+
+  -- and an admin must not be able to announce a place the member does not hold
+  PERFORM set_config('request.jwt.claims',
+    json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+  v_r := public.enqueue_waitlist_promotion_notice(v_user_c.user_id, v_sched, NULL);
+  IF (v_r->>'success')::boolean THEN
+    RAISE EXCEPTION 'T10 FAILED: notice queued for a member with no confirmed booking';
+  END IF;
+  IF v_r->>'reason' <> 'no_confirmed_booking' THEN
+    RAISE EXCEPTION 'T10 FAILED: wrong refusal reason: %', v_r;
+  END IF;
+
   RAISE NOTICE '✅ ALL PHASE 3 TESTS PASSED (transaction will be rolled back — nothing persisted)';
 END;
 $$;
@@ -237,7 +288,7 @@ ROLLBACK;
 
 -- ============================================================================
 -- SECTION B — read-only production invariants (safe to run any time)
--- All three queries must return zero rows.
+-- All four queries must return zero rows.
 -- ============================================================================
 
 -- B1. No FUTURE schedule may exceed its capacity
@@ -266,3 +317,15 @@ JOIN subscription_plans sp ON sp.id = us.plan_id
 WHERE us.status = 'active' AND sp.type = 'abonnement'
   AND sp.weekly_limit IS NOT NULL
   AND us.weekly_credits_used > sp.weekly_limit;
+
+-- B4. Nobody may hold a place won from the waitlist without having been told.
+--     Rows here are promotions whose notice is stuck: either the worker has
+--     never run, or it exhausted its retries (see last_error).
+SELECT n.id, n.user_id, p.full_name, p.phone, c.title, cs.start_datetime,
+       n.promoted_at, n.attempts, n.last_error
+FROM waitlist_promotion_notices n
+JOIN profiles p          ON p.id  = n.user_id
+JOIN class_schedules cs  ON cs.id = n.schedule_id
+JOIN classes c           ON c.id  = cs.class_id
+WHERE n.notified_at IS NULL
+  AND n.promoted_at < now() - interval '1 hour';

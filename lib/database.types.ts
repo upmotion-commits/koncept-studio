@@ -494,6 +494,45 @@ export type Database = {
           },
         ]
       }
+      waitlist_promotion_notices: {
+        Row: {
+          id: string
+          user_id: string
+          schedule_id: string
+          booking_id: string | null
+          promoted_by: string | null
+          promoted_at: string
+          claimed_at: string | null
+          notified_at: string | null
+          attempts: number
+          last_error: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          schedule_id: string
+          booking_id?: string | null
+          promoted_by?: string | null
+          promoted_at?: string
+          claimed_at?: string | null
+          notified_at?: string | null
+          attempts?: number
+          last_error?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          schedule_id?: string
+          booking_id?: string | null
+          promoted_by?: string | null
+          promoted_at?: string
+          claimed_at?: string | null
+          notified_at?: string | null
+          attempts?: number
+          last_error?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_logs: {
         Row: {
           id: string
@@ -721,6 +760,14 @@ export type Database = {
       unflag_no_show: {
         Args: {
           p_booking_id: string
+        }
+        Returns: Json
+      }
+      enqueue_waitlist_promotion_notice: {
+        Args: {
+          p_user_id: string
+          p_schedule_id: string
+          p_booking_id?: string | null
         }
         Returns: Json
       }
