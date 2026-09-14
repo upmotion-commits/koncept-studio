@@ -70,6 +70,13 @@ Merge this branch. Verify on production:
   `select * from waitlist_promotion_notices order by promoted_at desc limit 5;`
   — the row must have a `notified_at`.
 
+**Then run invariant B4 from `docs/audit/phase3-validation.sql` a day later.**
+It lists promotions whose notice never went out. Zero rows means the queue is
+draining. This is the check that catches a worker which queues correctly but
+cannot deliver — exactly what happened between 5 and 11 September 2026, when
+the claim query was rejected by PostgREST and 19 promotions were recorded
+without a single message being sent.
+
 **No new cron job is added.** The Hobby plan caps both the number of cron
 jobs and how often they run, so the daily sweep for undelivered promotion
 notices is folded into the existing `/api/cron/cleanup-waitlist` (17:59) —

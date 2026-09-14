@@ -41,6 +41,11 @@ export async function deliverPendingWaitlistPromotions(
 ): Promise<DeliveryReport> {
   const report: DeliveryReport = { claimed: 0, sent: 0, skipped: 0, failed: 0 }
   const supabase = createAdminClient()
+  // A claim that errors means the worker could not even take the notice —
+  // a misconfiguration, not a per-member problem. If every claim errors the
+  // queue is stuck and silence is the wrong outcome, so we surface it.
+  let claimErrors = 0
+  let firstClaimError = ''
 
   const staleBefore = new Date(Date.now() - STALE_CLAIM_MINUTES * 60_000).toISOString()
 
@@ -62,6 +67,13 @@ export async function deliverPendingWaitlistPromotions(
   for (const candidate of candidates) {
     // Guarded claim. Re-asserting the claim state the candidate was read with
     // is what makes this atomic: only one worker's UPDATE matches.
+    //
+    // The claim returns nothing but the id on purpose. Asking for the joined
+    // member and class here made PostgREST refuse the whole request — the
+    // table has two foreign keys to `profiles` (user_id and promoted_by), so
+    // a bare `profiles(...)` embed is ambiguous (PGRST201) and the UPDATE
+    // never executed. Details are read separately below, where the
+    // relationship is named explicitly.
     const claim = supabase
       .from('waitlist_promotion_notices')
       .update({ claimed_at: new Date().toISOString() })
@@ -71,23 +83,48 @@ export async function deliverPendingWaitlistPromotions(
     const { data: claimed, error: claimError } = await (candidate.claimed_at === null
       ? claim.is('claimed_at', null)
       : claim.lt('claimed_at', staleBefore)
-    ).select(`
-        id,
-        user_id,
-        schedule_id,
-        profiles ( full_name, email, phone ),
-        class_schedules ( start_datetime, classes ( title ) )
-      `)
+    ).select('id')
 
     if (claimError) {
       console.error(`waitlist promotions: claim failed for ${candidate.id}`, claimError)
+      claimErrors++
+      if (!firstClaimError) firstClaimError = claimError.message
       report.failed++
       continue
     }
     if (!claimed?.length) continue // another worker took it
 
-    const notice = claimed[0] as unknown as NoticeRow
     report.claimed++
+
+    const { data: detail, error: detailError } = await supabase
+      .from('waitlist_promotion_notices')
+      .select(`
+        id,
+        user_id,
+        schedule_id,
+        profiles!waitlist_promotion_notices_user_id_fkey ( full_name, email, phone ),
+        class_schedules ( start_datetime, classes ( title ) )
+      `)
+      .eq('id', candidate.id)
+      .single()
+
+    if (detailError || !detail) {
+      await releaseForRetry(supabase, candidate.id, detailError?.message ?? 'notice detail unavailable')
+      report.failed++
+      continue
+    }
+
+    const notice = detail as unknown as NoticeRow
+
+    // Never announce a place in a class that has already started. A notice
+    // can only get this old if delivery was broken for a while; telling
+    // someone they have a spot in yesterday's class is worse than silence.
+    const startsAt = notice.class_schedules?.start_datetime
+    if (startsAt && new Date(startsAt).getTime() <= Date.now()) {
+      await markNotified(supabase, notice.id, 'class_already_started')
+      report.skipped++
+      continue
+    }
 
     const profile = notice.profiles
     if (!profile?.phone) {
@@ -125,6 +162,14 @@ export async function deliverPendingWaitlistPromotions(
       )
       report.failed++
     }
+  }
+
+  if (claimErrors > 0 && claimErrors === candidates.length) {
+    // Every notice failed the same way: the queue is not draining at all.
+    // Throwing makes the cron return 500 instead of reporting a quiet success.
+    throw new Error(
+      `waitlist promotions: could not claim any of ${candidates.length} pending notices — ${firstClaimError}`
+    )
   }
 
   return report

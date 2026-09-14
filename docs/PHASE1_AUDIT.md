@@ -161,3 +161,43 @@ Also fixed while in the area: the J−7 expiry cron logged its WhatsApp sends
 with a caller-scoped client, but a cron has no session, so those log writes
 were made as `anon` and would have been dropped by RLS. It now logs with the
 service role.
+
+## Promotion notices stuck in the queue (2026-09-11)
+
+Reported: Ito ouhafsa was promoted from a waitlist and received no WhatsApp.
+
+The queue was working; the worker was not. `waitlist_promotion_notices` held
+**19 promotions recorded between 5 and 11 September, none delivered** — every
+row still at `claimed_at NULL, attempts 0`, meaning the worker never even took
+a notice. `whatsapp_logs` still showed the same 7 `waitlist_promotion` rows it
+had in February.
+
+Root cause, in the worker's claim query
+(`lib/services/waitlist-promotion-notifier.ts`): it asked PostgREST to return
+the joined member and class on the claiming UPDATE, with a bare
+`profiles ( ... )` embed. `waitlist_promotion_notices` has **two** foreign keys
+to `profiles` — `user_id` and `promoted_by` — so the embed is ambiguous.
+PostgREST rejects the whole request with `PGRST201` / HTTP 300 *before*
+executing it, so the UPDATE never ran, the notice was never claimed, and the
+error only reached `console.error`.
+
+Verified against production with the exact query the client issues: the
+candidate query returns all 19 rows (HTTP 200), the claim query returns
+`PGRST201` (HTTP 300).
+
+This was missed because the migration was tested end-to-end against a local
+PostgreSQL 16 — which validates the SQL but not the PostgREST layer the
+application actually talks to. The invariant that would have caught it in a
+day, B4 in `docs/audit/phase3-validation.sql`, was written but never run after
+the deploy.
+
+Fixed by claiming with `select('id')` (no embed, so no ambiguity is possible)
+and reading the details in a second query that names the relationship
+explicitly. Two further changes came out of it:
+
+- **Notices for classes that have already started are closed, not sent**
+  (`last_error = 'class_already_started'`). Without this, deploying the fix
+  would have told 18 members they had a place in a class that ended days ago.
+- **A queue that cannot drain at all now throws**, so the cron returns 500 and
+  the failure is visible, instead of reporting a quiet success with a
+  `failed` count nobody reads.
