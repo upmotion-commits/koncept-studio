@@ -14,6 +14,7 @@ import { format, parseISO, startOfWeek, addDays, isSameDay, isFuture, isPast } f
 import { fr } from 'date-fns/locale'
 import { toast } from 'sonner'
 import { adminBookClass } from '@/app/espace/reservations/actions'
+import { formatStudioTime } from '@/lib/utils/studio-time'
 
 interface User {
   id: string
@@ -312,7 +313,7 @@ export function AdminBookingView({ adminId }: AdminBookingViewProps) {
                                 <p className="font-semibold text-sm">{schedule.classes.title}</p>
                                 <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                                   <IconClock className="h-3 w-3" />
-                                  {format(parseISO(schedule.start_datetime), 'HH:mm')} - {format(parseISO(schedule.end_datetime), 'HH:mm')}
+                                  {formatStudioTime(schedule.start_datetime)} - {formatStudioTime(schedule.end_datetime)}
                                 </div>
                                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                   <IconCoach className="h-3 w-3" />

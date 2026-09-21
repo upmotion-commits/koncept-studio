@@ -27,6 +27,7 @@ import { toast } from 'sonner'
 import { formatDesiredPlansDisplay, parseDesiredPlans } from '@/lib/utils/plan-utils'
 import { assignSubscriptionToUser, deleteUser } from './actions'
 import * as XLSX from 'xlsx'
+import { formatStudioShortDate, formatStudioTime } from '@/lib/utils/studio-time'
 
 interface User {
   id: string
@@ -1848,11 +1849,11 @@ export default function UsersPage() {
                                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
                                             <div className="flex items-center gap-1">
                                               <IconCalendar className="h-3 w-3 shrink-0" />
-                                              <span className="truncate">{format(new Date(classSchedule.start_datetime), 'EEE d MMM yyyy', { locale: fr })}</span>
+                                              <span className="truncate">{formatStudioShortDate(classSchedule.start_datetime)}</span>
                                             </div>
                                             <div className="flex items-center gap-1">
                                               <IconClock className="h-3 w-3 shrink-0" />
-                                              {format(new Date(classSchedule.start_datetime), 'HH:mm', { locale: fr })}
+                                              {formatStudioTime(classSchedule.start_datetime)}
                                             </div>
                                             <div className="flex items-center gap-1">
                                               <IconUser className="h-3 w-3 shrink-0" />

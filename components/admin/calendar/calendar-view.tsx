@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { IconChevronLeft, IconChevronRight, IconPlus, IconCalendar, IconClock } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
+import { formatStudioTime } from '@/lib/utils/studio-time'
 
 export type CalendarEvent = {
   id: string
@@ -130,7 +131,7 @@ export function CalendarView({
                         <CardContent className="p-3">
                           <div className="font-medium text-sm">{event.title}</div>
                           <div className="text-xs text-muted-foreground">
-                            {format(new Date(event.start_datetime), 'HH:mm')} - {format(new Date(event.end_datetime), 'HH:mm')}
+                            {formatStudioTime(event.start_datetime)} - {formatStudioTime(event.end_datetime)}
                           </div>
                           <div className="text-xs text-muted-foreground">{event.coach}</div>
                           <Badge variant="outline" className="text-xs">
@@ -206,7 +207,7 @@ export function CalendarView({
                           <div className="min-w-0">
                             <div className="font-medium truncate">{event.title}</div>
                             <div className="text-xs text-muted-foreground">
-                              {format(new Date(event.start_datetime), 'HH:mm')} - {format(new Date(event.end_datetime), 'HH:mm')} · {event.coach}
+                              {formatStudioTime(event.start_datetime)} - {formatStudioTime(event.end_datetime)} · {event.coach}
                             </div>
                           </div>
                           <Badge variant="outline" className="shrink-0 tabular-nums">
@@ -384,7 +385,7 @@ export function CalendarView({
                           onEventClick?.(event)
                         }}
                       >
-                        {format(new Date(event.start_datetime), 'HH:mm')} {event.title}
+                        {formatStudioTime(event.start_datetime)} {event.title}
                       </div>
                     ))}
                     {dayEvents.length > 3 && (

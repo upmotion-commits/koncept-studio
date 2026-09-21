@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { IconCalendar, IconClock, IconUsers, IconDownload } from '@tabler/icons-react'
 import { toast } from 'sonner'
 import jsPDF from 'jspdf'
+import { formatStudioTime } from '@/lib/utils/studio-time'
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -269,8 +270,8 @@ export default function CalendarPage() {
         yPosition = 20
       }
 
-      const startTime = format(new Date(event.start_datetime), 'HH:mm', { locale: fr })
-      const endTime = format(new Date(event.end_datetime), 'HH:mm', { locale: fr })
+      const startTime = formatStudioTime(event.start_datetime)
+      const endTime = formatStudioTime(event.end_datetime)
 
       // Time
       pdf.setFont('helvetica', 'bold')
@@ -326,7 +327,7 @@ export default function CalendarPage() {
     // Get unique time slots
     const timeSlots = new Set<string>()
     weekEvents.forEach(event => {
-      const time = format(new Date(event.start_datetime), 'HH:mm')
+      const time = formatStudioTime(event.start_datetime)
       timeSlots.add(time)
     })
 
@@ -346,7 +347,7 @@ export default function CalendarPage() {
       pdf.text(timeSlot, startX, yPosition)
 
       const rowEvents = weekEvents.filter(event =>
-        format(new Date(event.start_datetime), 'HH:mm') === timeSlot
+        formatStudioTime(event.start_datetime) === timeSlot
       )
 
       let maxLines = 1
@@ -455,7 +456,7 @@ export default function CalendarPage() {
 
         dayEvents.slice(0, 3).forEach((event, eventIndex) => {
           const eventY = dayY + 12 + (eventIndex * 3)
-          const eventTime = format(new Date(event.start_datetime), 'HH:mm')
+          const eventTime = formatStudioTime(event.start_datetime)
           const eventText = `${eventTime} ${event.title.substring(0, 8)}`
           pdf.text(eventText, dayX + 1, eventY)
         })

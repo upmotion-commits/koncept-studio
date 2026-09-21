@@ -31,6 +31,7 @@ import { toast } from 'sonner'
 import * as XLSX from 'xlsx'
 import { AdminBookingView } from '@/components/admin/booking/admin-booking-view'
 import { flagNoShow, unflagNoShow } from './actions'
+import { formatStudioDateTime } from '@/lib/utils/studio-time'
 
 interface BookingStats {
   total: number
@@ -293,7 +294,7 @@ export default function BookingsPage() {
         'Téléphone': booking.profiles?.phone || '',
         'Cours': booking.class_schedules?.classes?.title || '',
         'Coach': booking.class_schedules?.classes?.coach || '',
-        'Date/Heure': format(parseISO(booking.class_schedules?.start_datetime), 'dd/MM/yyyy HH:mm', { locale: fr }),
+        'Date/Heure': formatStudioDateTime(booking.class_schedules?.start_datetime),
         'Lieu': booking.class_schedules?.classes?.location || '',
         'Statut': booking.status === 'confirmed' ? 'Confirmé' : booking.status === 'cancelled' ? 'Annulé' : booking.status,
         'Abonnement': booking.user_subscriptions?.subscription_plans?.name || '',

@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { BookingService } from '@/lib/services/booking.service'
 import confetti from 'canvas-confetti'
+import { formatStudioDate, formatStudioTime, studioNow } from '@/lib/utils/studio-time'
 
 interface UserProfile {
   id: string
@@ -82,39 +83,11 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
   const [selectedMobileDate, setSelectedMobileDate] = useState<Date>(new Date())
 
   // Studio launch logic - 2025 dates
-  // Get current effective date
-  const getCurrentDate = () => {
-    const now = new Date();
-
-    // 1. Get the exact time components for Morocco (handling DST & Ramadan automatically)
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Africa/Casablanca',
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric',
-      hour12: false, // Use 24h format for easy parsing
-    });
-
-    const parts = formatter.formatToParts(now);
-
-    // Helper to extract parts safely
-    const getPart = (type: string) => parseInt(parts.find((p) => p.type === type)?.value || '0', 10);
-
-    // 2. Construct a new Date object.
-    // We use the numbers from Morocco, but creating a "Local" Date object.
-    // This effectively tricks the browser into thinking the device is in Morocco.
-    return new Date(
-      getPart('year'),
-      getPart('month') - 1, // Important: JavaScript months are 0-11
-      getPart('day'),
-      getPart('hour'),
-      getPart('minute'),
-      getPart('second')
-    );
-  };
+  // "Now" on the studio's clock, not the device's. The booking window is
+  // compared against wall-clock 17:00, so this has to be the studio's wall
+  // clock or the window opens at the wrong hour — for members abroad, and for
+  // anyone whose device carries stale timezone rules. See lib/utils/studio-time.
+  const getCurrentDate = () => studioNow();
 
   // Launch dates
   const prelaunchStart = new Date(2025, 8, 21) // Sept 21, 2025
@@ -1282,7 +1255,7 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
                       )}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {format(new Date(selectedEvent.start_datetime), 'EEEE d MMMM yyyy', { locale: fr })}
+                      {formatStudioDate(selectedEvent.start_datetime)}
                     </div>
                   </div>
 
@@ -1389,13 +1362,13 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Début:</span>
                         <span className="font-medium">
-                          {format(new Date(selectedEvent.start_datetime), 'HH:mm')}
+                          {formatStudioTime(selectedEvent.start_datetime)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Fin:</span>
                         <span className="font-medium">
-                          {format(new Date(selectedEvent.end_datetime), 'HH:mm')}
+                          {formatStudioTime(selectedEvent.end_datetime)}
                         </span>
                       </div>
                       <div className="flex justify-between">

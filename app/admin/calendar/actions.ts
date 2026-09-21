@@ -3,8 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { whatsappServerService } from '@/lib/services/server'
 import { generateClassCancellationMessage } from '@/lib/utils/whatsapp-messages'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { formatStudioDate, formatStudioTime } from '@/lib/utils/studio-time'
 
 interface DeleteClassEventParams {
   eventId: string
@@ -136,8 +135,11 @@ export async function deleteClassEvent({
 
             if (!user || !schedule || !user.phone) return
 
-            const classDate = format(new Date(schedule.start_datetime), 'EEEE dd MMMM yyyy', { locale: fr })
-            const classTime = format(new Date(schedule.start_datetime), 'HH:mm', { locale: fr })
+            // Studio time, not the server's. This runs on Vercel (UTC), so a
+            // bare date-fns format named the class an hour early in every
+            // cancellation message ever sent.
+            const classDate = formatStudioDate(schedule.start_datetime)
+            const classTime = formatStudioTime(schedule.start_datetime)
 
             const message = generateClassCancellationMessage(
               user,
@@ -248,8 +250,11 @@ export async function cancelClassEvent({
 
             if (!user || !schedule || !user.phone) return
 
-            const classDate = format(new Date(schedule.start_datetime), 'EEEE dd MMMM yyyy', { locale: fr })
-            const classTime = format(new Date(schedule.start_datetime), 'HH:mm', { locale: fr })
+            // Studio time, not the server's. This runs on Vercel (UTC), so a
+            // bare date-fns format named the class an hour early in every
+            // cancellation message ever sent.
+            const classDate = formatStudioDate(schedule.start_datetime)
+            const classTime = formatStudioTime(schedule.start_datetime)
 
             const message = generateClassCancellationMessage(
               user,

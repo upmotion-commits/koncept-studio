@@ -1,5 +1,6 @@
 import { APP_CONFIG } from '@/constants/config'
 import { formatPhoneNumber } from './phone'
+import { formatStudioDayMonth, formatStudioLongDate, formatStudioTime } from './studio-time'
 
 interface UserProfile {
   full_name: string | null
@@ -92,18 +93,8 @@ export function generateWaitlistPromotionMessage(
 
   let classLines = ''
   if (className && startIso) {
-    const start = new Date(startIso)
-    const date = new Intl.DateTimeFormat('fr-FR', {
-      timeZone: 'Africa/Casablanca',
-      weekday: 'long',
-      day: '2-digit',
-      month: 'long',
-    }).format(start)
-    const time = new Intl.DateTimeFormat('fr-FR', {
-      timeZone: 'Africa/Casablanca',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(start)
+    const date = formatStudioDayMonth(startIso)
+    const time = formatStudioTime(startIso)
 
     classLines = `
 📅 *Cours:* ${className}
@@ -211,12 +202,7 @@ export function generateSubscriptionExpiryMessage(
   endDateIso: string
 ): string {
   const name = user.full_name || 'Cher membre'
-  const endDate = new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Africa/Casablanca',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(endDateIso))
+  const endDate = formatStudioLongDate(endDateIso)
 
   return `⏳ *Votre abonnement expire bientôt*
 
