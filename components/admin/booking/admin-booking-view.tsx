@@ -14,7 +14,7 @@ import { format, parseISO, startOfWeek, addDays, isSameDay, isFuture, isPast } f
 import { fr } from 'date-fns/locale'
 import { toast } from 'sonner'
 import { adminBookClass } from '@/app/espace/reservations/actions'
-import { formatStudioTime } from '@/lib/utils/studio-time'
+import { formatStudioTime, studioWallClockFromISO } from '@/lib/utils/studio-time'
 
 interface User {
   id: string
@@ -164,7 +164,7 @@ export function AdminBookingView({ adminId }: AdminBookingViewProps) {
     days.forEach(day => {
       const dayKey = format(day, 'yyyy-MM-dd')
       grouped[dayKey] = schedules.filter(schedule =>
-        isSameDay(parseISO(schedule.start_datetime), day)
+        isSameDay(studioWallClockFromISO(schedule.start_datetime), day)
       )
     })
 

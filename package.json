@@ -10,7 +10,8 @@
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
     "build:analyze": "ANALYZE=true npm run build",
-    "production": "npm run lint && npm run type-check && npm run build"
+    "production": "npm run lint && npm run type-check && npm run build",
+    "verify:time": "node --experimental-strip-types scripts/verify-studio-time.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

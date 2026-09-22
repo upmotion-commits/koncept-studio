@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { IconCalendar, IconClock, IconUsers, IconDownload } from '@tabler/icons-react'
 import { toast } from 'sonner'
 import jsPDF from 'jspdf'
-import { formatStudioTime } from '@/lib/utils/studio-time'
+import { formatStudioTime, studioWallClockFromISO } from '@/lib/utils/studio-time'
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -72,7 +72,7 @@ export default function CalendarPage() {
 
   const handleEditEvent = (event: CalendarEvent) => {
     setSelectedEvent(event)
-    setSelectedDate(new Date(event.start_datetime))
+    setSelectedDate(studioWallClockFromISO(event.start_datetime))
     setShowScheduleForm(true)
   }
 
@@ -111,7 +111,7 @@ export default function CalendarPage() {
     }
 
     const periodEvents = events.filter(event => {
-      const eventDate = new Date(event.start_datetime)
+      const eventDate = studioWallClockFromISO(event.start_datetime)
       return (eventDate >= dateRange.start && eventDate <= dateRange.end)
     })
 
@@ -181,7 +181,7 @@ export default function CalendarPage() {
 
       // Filter events for the current view
       const viewEvents = events.filter(event => {
-        const eventDate = new Date(event.start_datetime)
+        const eventDate = studioWallClockFromISO(event.start_datetime)
         return eventDate >= dateRange.start && eventDate <= dateRange.end
       })
 
@@ -353,7 +353,7 @@ export default function CalendarPage() {
       let maxLines = 1
       days.forEach((day, dayIndex) => {
         const dayEvents = rowEvents.filter(event => {
-          const eventDate = new Date(event.start_datetime)
+          const eventDate = studioWallClockFromISO(event.start_datetime)
           return format(eventDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
         })
 
@@ -446,7 +446,7 @@ export default function CalendarPage() {
 
         // Events for this day
         const dayEvents = monthEvents.filter(event => {
-          const eventDate = new Date(event.start_datetime)
+          const eventDate = studioWallClockFromISO(event.start_datetime)
           return format(eventDate, 'yyyy-MM-dd') === format(dayDate, 'yyyy-MM-dd')
         })
 

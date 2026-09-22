@@ -15,6 +15,7 @@ import { BookingService } from '@/lib/services/booking.service'
 import { waitlistService } from '@/lib/services/waitlist.service'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { formatStudioDateTime, formatStudioNumericDate, formatStudioTime, studioWallClockFromISO } from '@/lib/utils/studio-time'
 
 interface Booking {
   id: string
@@ -379,11 +380,11 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                             <div className="flex items-center gap-2">
                               <IconCalendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <span className="truncate">{formatDateWithCapitalization(startTime, 'EEEE d MMM')}</span>
+                              <span className="truncate">{formatDateWithCapitalization(studioWallClockFromISO(startTime), 'EEEE d MMM')}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <IconClock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <span>{format(startTime, 'HH:mm')} - {format(endTime, 'HH:mm')}</span>
+                              <span>{formatStudioTime(startTime)} - {formatStudioTime(endTime)}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <IconUser className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -396,7 +397,7 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
                           </div>
 
                           <div className="text-xs text-muted-foreground">
-                            Réservé le {format(new Date(booking.booked_at), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                            Réservé le {formatStudioDateTime(booking.booked_at)}
                           </div>
                         </div>
 
@@ -467,11 +468,11 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                             <div className="flex items-center gap-2">
                               <IconCalendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <span className="truncate">{formatDateWithCapitalization(startTime, 'EEEE d MMM')}</span>
+                              <span className="truncate">{formatDateWithCapitalization(studioWallClockFromISO(startTime), 'EEEE d MMM')}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <IconClock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <span>{format(startTime, 'HH:mm')} - {format(endTime, 'HH:mm')}</span>
+                              <span>{formatStudioTime(startTime)} - {formatStudioTime(endTime)}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <IconUser className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -485,7 +486,7 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
 
                           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                             <div className="text-xs text-muted-foreground">
-                              Ajouté le {format(new Date(entry.joined_at), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                              Ajouté le {formatStudioDateTime(entry.joined_at)}
                             </div>
                             <div className="text-xs text-muted-foreground">
                               Cours {occupancyRate >= 100 ? 'complet' : `${occupancyRate}% rempli`}
@@ -559,11 +560,11 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                             <div className="flex items-center gap-2">
                               <IconCalendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <span className="truncate">{formatDateWithCapitalization(startTime, 'EEEE d MMM')}</span>
+                              <span className="truncate">{formatDateWithCapitalization(studioWallClockFromISO(startTime), 'EEEE d MMM')}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <IconClock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <span>{format(startTime, 'HH:mm')} - {format(endTime, 'HH:mm')}</span>
+                              <span>{formatStudioTime(startTime)} - {formatStudioTime(endTime)}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <IconUser className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -583,7 +584,7 @@ export function UserReservationsView({ userId, userSubscriptionStatus }: UserRes
                           </Badge>
                           {booking.cancelled_at && (
                             <div className="text-xs text-muted-foreground">
-                              Annulé le {format(new Date(booking.cancelled_at), 'dd/MM/yyyy', { locale: fr })}
+                              Annulé le {formatStudioNumericDate(booking.cancelled_at)}
                             </div>
                           )}
                         </div>

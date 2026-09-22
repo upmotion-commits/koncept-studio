@@ -31,7 +31,7 @@ import { toast } from 'sonner'
 import * as XLSX from 'xlsx'
 import { AdminBookingView } from '@/components/admin/booking/admin-booking-view'
 import { flagNoShow, unflagNoShow } from './actions'
-import { formatStudioDateTime } from '@/lib/utils/studio-time'
+import { formatStudioDate, formatStudioDateTime, formatStudioTime, studioWallClockFromISO } from '@/lib/utils/studio-time'
 
 interface BookingStats {
   total: number
@@ -272,7 +272,7 @@ export default function BookingsPage() {
       const dayEnd = endOfDay(selectedDate)
 
       filtered = filtered.filter(booking => {
-        const bookingDate = parseISO(booking.class_schedules?.start_datetime)
+        const bookingDate = studioWallClockFromISO(booking.class_schedules?.start_datetime)
         return isWithinInterval(bookingDate, { start: dayStart, end: dayEnd })
       })
     }
@@ -527,11 +527,11 @@ export default function BookingsPage() {
                     <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
                       <span className="flex items-center gap-1">
                         <IconCalendar className="h-4 w-4" />
-                        {format(parseISO(group.startDatetime), 'EEEE d MMMM yyyy', { locale: fr })}
+                        {formatStudioDate(group.startDatetime)}
                       </span>
                       <span className="flex items-center gap-1">
                         <IconClock className="h-4 w-4" />
-                        {format(parseISO(group.startDatetime), 'HH:mm', { locale: fr })} - {format(parseISO(group.endDatetime), 'HH:mm', { locale: fr })}
+                        {formatStudioTime(group.startDatetime)} - {formatStudioTime(group.endDatetime)}
                       </span>
                       <span>Coach: {group.coach}</span>
                       <span>Lieu: {group.location}</span>

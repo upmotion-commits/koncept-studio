@@ -80,6 +80,11 @@ export function formatStudioLongDate(value: string | Date): string {
   return studioFormat(value, { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
+/** "21/09/2026" */
+export function formatStudioNumericDate(value: string | Date): string {
+  return studioFormat(value, { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
 /** "21/09/2026 à 17:30" */
 export function formatStudioDateTime(value: string | Date): string {
   return `${studioFormat(value, { day: '2-digit', month: '2-digit', year: 'numeric' })} à ${formatStudioTime(value)}`

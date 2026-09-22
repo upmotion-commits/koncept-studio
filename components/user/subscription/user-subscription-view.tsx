@@ -23,6 +23,7 @@ import {
   IconClock as IconTimer
 } from '@tabler/icons-react'
 import { LoadingSpinner } from '@/components/ui/loading'
+import { studioWallClockFromISO } from '@/lib/utils/studio-time'
 
 interface UserProfile {
   id: string
@@ -188,14 +189,14 @@ export function UserSubscriptionView({
 
   // Calculate usage statistics
   const thisWeekBookings = recentBookings.filter(booking => {
-    const bookingDate = new Date(booking.class_schedules.start_datetime)
+    const bookingDate = studioWallClockFromISO(booking.class_schedules.start_datetime)
     const weekStart = startOfWeek(new Date(), { locale: fr })
     const weekEnd = endOfWeek(new Date(), { locale: fr })
     return bookingDate >= weekStart && bookingDate <= weekEnd
   })
 
   const thisMonthBookings = recentBookings.filter(booking => {
-    const bookingDate = new Date(booking.class_schedules.start_datetime)
+    const bookingDate = studioWallClockFromISO(booking.class_schedules.start_datetime)
     const now = new Date()
     return bookingDate.getMonth() === now.getMonth() && bookingDate.getFullYear() === now.getFullYear()
   })

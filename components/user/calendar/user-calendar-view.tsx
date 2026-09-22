@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { BookingService } from '@/lib/services/booking.service'
 import confetti from 'canvas-confetti'
-import { formatStudioDate, formatStudioTime, studioNow } from '@/lib/utils/studio-time'
+import { formatStudioDate, formatStudioTime, studioNow, studioWallClockFromISO } from '@/lib/utils/studio-time'
 
 interface UserProfile {
   id: string
@@ -458,9 +458,13 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
   const canCancelBooking = (event: ClassEvent) => {
     if (!event.user_booking) return false
 
+    // Real instants on both sides. getCurrentDate() returns the studio's WALL
+    // CLOCK rebased into device-local, which is right for "is it past 17:00 at
+    // the studio" but wrong to subtract from an instant — the difference would
+    // be off by the device's own offset. The server enforces the same 3 hours
+    // in cancel_booking_v2; this only decides whether the button is shown.
     const classStartTime = new Date(event.start_datetime)
-    const now = getCurrentDate()
-    const timeDifferenceInHours = (classStartTime.getTime() - now.getTime()) / (1000 * 60 * 60)
+    const timeDifferenceInHours = (classStartTime.getTime() - Date.now()) / (1000 * 60 * 60)
 
     return timeDifferenceInHours > 3
   }
@@ -509,7 +513,7 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
 
   const getEventsForDate = (date: Date) => {
     return events.filter(event => {
-      const eventDate = new Date(event.start_datetime)
+      const eventDate = studioWallClockFromISO(event.start_datetime)
       return isSameDay(eventDate, date)
     })
   }
@@ -664,7 +668,7 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
     }
 
     // Check if booking window is open (Sunday at 18:00:00)
-    if (!isEventBookingOpen(new Date(event.start_datetime))) {
+    if (!isEventBookingOpen(studioWallClockFromISO(event.start_datetime))) {
       return false
     }
 
@@ -689,7 +693,7 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
       !isEventPast(event.start_datetime) &&
       subscription &&
       currentPhase !== 'pre-launch' &&
-      isEventBookingOpen(new Date(event.start_datetime))
+      isEventBookingOpen(studioWallClockFromISO(event.start_datetime))
   }
 
   const handleEventClick = (event: ClassEvent) => {
@@ -836,7 +840,7 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
                       ) : (
                         <div className="space-y-2">
                           {dayEvents.map(event => {
-                            const startTime = new Date(event.start_datetime)
+                            const startTime = studioWallClockFromISO(event.start_datetime)
                             const occupancyRate = Math.round((event.current_bookings / event.max_capacity) * 100)
 
                             return (
@@ -1074,8 +1078,8 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
                   ) : (
                     <div className="space-y-3">
                       {selectedDayEvents.map(event => {
-                        const startTime = new Date(event.start_datetime)
-                        const endTime = new Date(event.end_datetime)
+                        const startTime = studioWallClockFromISO(event.start_datetime)
+                        const endTime = studioWallClockFromISO(event.end_datetime)
 
                         return (
                           <Card key={event.id} className={cn(
@@ -1293,10 +1297,10 @@ export function UserCalendarView({ user, subscription: initialSubscription }: Us
                             <IconCalendarX className="h-4 w-4 mr-2" />
                             Réservations bientôt ouvertes
                           </Button>
-                        ) : !isEventBookingOpen(new Date(selectedEvent.start_datetime)) ? (
+                        ) : !isEventBookingOpen(studioWallClockFromISO(selectedEvent.start_datetime)) ? (
                           <Button variant="outline" disabled>
                             <IconCalendarX className="h-4 w-4 mr-2" />
-                            Ouverture : {getOpeningTimeMessage(new Date(selectedEvent.start_datetime))}
+                            Ouverture : {getOpeningTimeMessage(studioWallClockFromISO(selectedEvent.start_datetime))}
                           </Button>
                         ) : canUserBook(selectedEvent) ? (
                           <Button

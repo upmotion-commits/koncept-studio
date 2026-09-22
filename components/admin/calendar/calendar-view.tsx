@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { IconChevronLeft, IconChevronRight, IconPlus, IconCalendar, IconClock } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
-import { formatStudioTime } from '@/lib/utils/studio-time'
+import { formatStudioTime, studioWallClockFromISO } from '@/lib/utils/studio-time'
 
 export type CalendarEvent = {
   id: string
@@ -86,7 +86,7 @@ export function CalendarView({
 
   const getEventsForDate = (date: Date) => {
     return events.filter(event => {
-      const eventDate = new Date(event.start_datetime)
+      const eventDate = studioWallClockFromISO(event.start_datetime)
       return isSameDay(eventDate, date)
     })
   }
@@ -96,7 +96,7 @@ export function CalendarView({
 
     // Get unique hours that have events
     const hoursWithEvents = [...new Set(dayEvents.map(event =>
-      new Date(event.start_datetime).getHours()
+      studioWallClockFromISO(event.start_datetime).getHours()
     ))].sort((a, b) => a - b)
 
     return (
@@ -112,7 +112,7 @@ export function CalendarView({
               timeSlot.setHours(hour, 0, 0, 0)
 
               const slotEvents = dayEvents.filter(event => {
-                const eventStart = new Date(event.start_datetime)
+                const eventStart = studioWallClockFromISO(event.start_datetime)
                 return eventStart.getHours() === hour
               })
 
@@ -159,7 +159,7 @@ export function CalendarView({
     const hoursWithEvents = [...new Set(
       weekDays.flatMap(day =>
         getEventsForDate(day).map(event =>
-          new Date(event.start_datetime).getHours()
+          studioWallClockFromISO(event.start_datetime).getHours()
         )
       )
     )].sort((a, b) => a - b)
@@ -255,7 +255,7 @@ export function CalendarView({
                 </div>
                 {weekDays.map(day => {
                   const dayEvents = getEventsForDate(day).filter(event => {
-                    const eventStart = new Date(event.start_datetime)
+                    const eventStart = studioWallClockFromISO(event.start_datetime)
                     return eventStart.getHours() === hour
                   })
 

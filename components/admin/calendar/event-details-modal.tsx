@@ -15,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { IconCalendar, IconClock, IconMapPin, IconUser, IconUsers, IconTrash, IconRepeat, IconLoader } from '@tabler/icons-react'
 import { deleteClassEvent, cancelClassEvent } from '@/app/admin/calendar/actions'
 import { toast } from 'sonner'
+import { studioWallClockFromISO } from '@/lib/utils/studio-time'
 
 interface EventDetailsModalProps {
   event: CalendarEvent
@@ -131,8 +132,8 @@ export function EventDetailsModal({ event, onClose, onEdit }: EventDetailsModalP
     }
   }
 
-  const startDate = new Date(event.start_datetime)
-  const endDate = new Date(event.end_datetime)
+  const startDate = studioWallClockFromISO(event.start_datetime)
+  const endDate = studioWallClockFromISO(event.end_datetime)
   const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60))
   const occupancyRate = Math.round((event.current_bookings / event.max_capacity) * 100)
 
