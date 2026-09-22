@@ -2,58 +2,57 @@
  * The studio's clock — one place, used everywhere a member sees a time.
  *
  * Class times are stored as absolute instants. Turning one back into "17:30"
- * needs a timezone, and until now every part of the app inferred a different
- * one: the member's device when rendering, the admin's device when creating a
- * schedule, and UTC inside server actions. That is why the same class could
+ * needs an offset, and the app used to take it from whatever machine was
+ * looking: the member's device when rendering, the admin's device when
+ * creating a schedule, UTC inside server actions. That is why one class could
  * show three different times.
  *
- * Everything member-facing should go through here instead.
- *
  * ---------------------------------------------------------------------------
- * THE OVERRIDE
+ * WHY THIS DOES NOT NAME A TIMEZONE
  *
- * Naming the zone is not sufficient on its own. `Africa/Casablanca` is
- * resolved from whatever copy of the IANA timezone database the runtime
- * happens to carry, and after a rule change those copies lag: as of
- * 2026-09-20 the production Postgres, the Node runtime (tz 2025c) and the
- * build image (tzdata 2025b) all still place Morocco at UTC+1.
+ * The obvious fix — format everything with timeZone: 'Africa/Casablanca' — is
+ * not enough, and the first version of this file learned that the hard way.
+ * A zone name is resolved from whatever copy of the IANA database the runtime
+ * carries, and those copies disagree after a rule change: on 2026-09-20,
+ * production Postgres, the Node runtime (tz 2025c) and plenty of member
+ * phones still placed Morocco at UTC+1 while the country had moved to UTC+0.
  *
- * STUDIO_TZ_OFFSET_OVERRIDE_MINUTES corrects that gap without waiting for the
- * platforms. It is the number of minutes to add to the instant before
- * formatting, so a runtime that is an hour ahead of reality is corrected with
- * -60. It defaults to 0, which is plain zone behaviour, and should be reset to
- * 0 (or the variable removed) once the platforms ship rules that match the
- * country — leaving it in place afterwards would double-correct.
+ * A correction applied *relative* to the zone cannot fix that, because the
+ * amount to correct differs per device: a phone with stale rules needs -60, a
+ * phone with current rules needs 0, and a single build-time constant is wrong
+ * for one of them either way.
  *
- * Set NEXT_PUBLIC_STUDIO_TZ_OFFSET_OVERRIDE in Vercel. It is public on
- * purpose: the browser needs the same correction the server uses, otherwise
- * the two disagree again.
+ * So this module never asks any runtime what Africa/Casablanca means. It
+ * shifts the instant by an offset the studio states outright, then formats in
+ * UTC — which every runtime renders identically, because UTC needs no rules.
+ * The result is the same on every device, always.
+ *
+ * There is no cost to this any more: with a permanently fixed offset there is
+ * nothing for a timezone database to tell us that we do not already know.
+ *
+ * MOROCCO IS PERMANENTLY UTC+0 (owner, 2026-09-22): no seasonal change, no
+ * Ramadan shift. The studio's wall clock and UTC are the same clock, for good,
+ * so the offset below is a stated constant rather than configuration — there
+ * is no environment variable to forget, mis-scope, or leave behind after a
+ * deploy. If that decision is ever reversed, change this one number (60 for
+ * UTC+1) and redeploy; nothing else in the app needs to move.
  * ---------------------------------------------------------------------------
  */
 
-export const STUDIO_TZ = 'Africa/Casablanca'
+/** Kept for display and for logging only — never used to resolve a time. */
+export const STUDIO_TZ_LABEL = 'Africa/Casablanca'
 
-export const STUDIO_TZ_OFFSET_OVERRIDE_MINUTES = (() => {
-  const raw = process.env.NEXT_PUBLIC_STUDIO_TZ_OFFSET_OVERRIDE
-  const parsed = raw ? Number(raw) : 0
-  // A typo here would silently move every displayed time, so refuse anything
-  // that is not a sane whole-minute offset and fall back to zone behaviour.
-  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || Math.abs(parsed) > 180) {
-    if (raw) console.error(`Ignoring invalid NEXT_PUBLIC_STUDIO_TZ_OFFSET_OVERRIDE: ${raw}`)
-    return 0
-  }
-  return parsed
-})()
+export const STUDIO_UTC_OFFSET_MINUTES = 0
 
-function corrected(value: string | Date): Date {
+/** The instant, moved so that reading it as UTC gives the studio's wall clock. */
+function shifted(value: string | Date): Date {
   const d = value instanceof Date ? value : new Date(value)
-  return STUDIO_TZ_OFFSET_OVERRIDE_MINUTES === 0
-    ? d
-    : new Date(d.getTime() + STUDIO_TZ_OFFSET_OVERRIDE_MINUTES * 60_000)
+  return new Date(d.getTime() + STUDIO_UTC_OFFSET_MINUTES * 60_000)
 }
 
 function studioFormat(value: string | Date, options: Intl.DateTimeFormatOptions): string {
-  return new Intl.DateTimeFormat('fr-FR', { timeZone: STUDIO_TZ, ...options }).format(corrected(value))
+  // timeZone: 'UTC' is the point — it is the one zone every runtime agrees on.
+  return new Intl.DateTimeFormat('fr-FR', { timeZone: 'UTC', ...options }).format(shifted(value))
 }
 
 /** "17:30" — the time the class actually starts, at the studio. */
@@ -91,25 +90,50 @@ export function formatStudioDateTime(value: string | Date): string {
  *
  * Comparisons like `now >= sundayAt17` are written against a Date's local
  * getters, so they only mean "17:00 at the studio" if `now` carries the
- * studio's wall clock. On a device in Morocco with current zone rules this is
- * the same as `new Date()`; on a device abroad, or one whose rules are stale,
- * it is not — which is exactly when the booking window used to open at the
- * wrong hour.
+ * studio's wall clock. This is what decides when the Sunday and Wednesday
+ * booking windows open, and it must not vary by device.
  *
  * The returned Date is a stand-in for comparing wall clocks, not a real
  * instant: do not send it to the database or subtract it from a real Date.
  */
 export function studioNow(): Date {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: STUDIO_TZ,
-    year: 'numeric', month: 'numeric', day: 'numeric',
-    hour: 'numeric', minute: 'numeric', second: 'numeric',
-    hour12: false,
-  }).formatToParts(corrected(new Date()))
+  const d = shifted(new Date())
+  return new Date(
+    d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
+    d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()
+  )
+}
 
-  const get = (type: string) => parseInt(parts.find(p => p.type === type)?.value || '0', 10)
-  // Intl renders midnight as hour 24 in some ICU versions.
-  const hour = get('hour') % 24
+/**
+ * Take a Date whose LOCAL components are the intended studio wall clock and
+ * return the instant to store.
+ *
+ * The admin schedule form builds its dates from `new Date("2026-09-21T17:30")`
+ * and then does all its recurrence arithmetic with local getters and setters,
+ * so every date it produces carries the wall clock the admin typed. What it
+ * must not do is hand that to `.toISOString()`, which converts using the
+ * admin's own offset: the same "17:30" then lands on a different instant
+ * depending on the laptop it was typed on. This reads those components as
+ * studio time instead, so the stored instant is the same either way.
+ */
+export function studioWallClockToISO(value: Date): string {
+  return new Date(
+    Date.UTC(
+      value.getFullYear(), value.getMonth(), value.getDate(),
+      value.getHours(), value.getMinutes(), value.getSeconds()
+    ) - STUDIO_UTC_OFFSET_MINUTES * 60_000
+  ).toISOString()
+}
 
-  return new Date(get('year'), get('month') - 1, get('day'), hour, get('minute'), get('second'))
+/**
+ * The inverse: a stored instant, as a Date whose LOCAL components read as the
+ * studio wall clock. Used to load an existing schedule back into the form so
+ * editing it does not silently move it.
+ */
+export function studioWallClockFromISO(value: string | Date): Date {
+  const d = shifted(value)
+  return new Date(
+    d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(),
+    d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()
+  )
 }

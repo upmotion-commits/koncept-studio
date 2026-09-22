@@ -140,3 +140,44 @@ user could call in a loop to self-grant credits). Do not skip or delay it.
 - `forcePromoteFromWaitlist` (admin) is now stopped by the capacity trigger
   when the class is genuinely full — it can no longer overbook. Say the word
   if you want a true override; it would need an explicit trigger bypass.
+
+## Studio clock — Morocco is permanently UTC+0 (2026-09-22)
+
+Morocco has settled on UTC+0 with no seasonal or Ramadan change. The studio's
+wall clock and UTC are now the same clock, permanently.
+
+**Nothing in the app resolves a timezone name any more.** `Africa/Casablanca`
+is looked up in whatever copy of the IANA database a runtime carries, and those
+copies disagree for weeks after a rule change — which is how one class came to
+show 17:30 on one phone and 18:30 on another. `lib/utils/studio-time.ts` now
+shifts the instant by a stated constant (`STUDIO_UTC_OFFSET_MINUTES = 0`) and
+formats in UTC, which every runtime renders identically. There is no
+environment variable: nothing to forget, mis-scope, or leave stale after a
+deploy. `NEXT_PUBLIC_STUDIO_TZ_OFFSET_OVERRIDE` and `NEXT_PUBLIC_STUDIO_UTC_OFFSET`
+are no longer read and should be deleted from Vercel.
+
+It works in both directions. Reads go through `formatStudio*`; writes go
+through `studioWallClockToISO`, so the schedule form stores the same instant
+for "17:30" whichever machine the admin types it on. That was the original
+defect: the September timetable was generated on a laptop at UTC+1 and every
+class landed an hour off when the country moved.
+
+`supabase/migrations/20260922010000_studio_time_is_utc.sql` does the same on
+the database side — the booking-window helpers and the no-show penalty
+messages move off the zone name, and the Sunday weekly-credit reset moves from
+16:00 to 17:00 UTC, which is 17:00 at the studio. Run it once; it is idempotent
+and has a rollback.
+
+The daily crons were pinned to UTC hours chosen when the studio was UTC+1, so
+they all slid an hour earlier in local terms. Two are restored to their
+intended local time; expiry stays at midnight, which is now midnight locally:
+
+| Job | Was | Now | Studio time |
+|---|---|---|---|
+| cleanup-waitlist | `59 17 * * *` | `59 18 * * *` | 18:59, clear of the 17:00 booking rush |
+| expire-subscriptions | `0 0 * * *` | unchanged | midnight |
+| expiring-subscriptions (J-7) | `0 8 * * *` | `0 9 * * *` | 09:00, not 08:00 |
+
+**If the decision is ever reversed**, change `STUDIO_UTC_OFFSET_MINUTES` to 60,
+run the SQL rollback, and move the cron hours back. Those are the only places
+the offset lives.

@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/cleanup-waitlist",
-      "schedule": "59 17 * * *"
+      "schedule": "59 18 * * *"
     },
     {
       "path": "/api/cron/expire-subscriptions",
@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/expiring-subscriptions",
-      "schedule": "0 8 * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }

@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { IconCalendar, IconClock, IconRepeat, IconX } from '@tabler/icons-react'
+import { studioWallClockFromISO, studioWallClockToISO } from '@/lib/utils/studio-time'
 
 interface ScheduleFormProps {
   event?: CalendarEvent | null
@@ -104,8 +105,10 @@ export function ScheduleForm({ event, selectedDate, onClose }: ScheduleFormProps
   }
 
   const populateFormFromEvent = (event: CalendarEvent) => {
-    const startDate = new Date(event.start_datetime)
-    const endDate = new Date(event.end_datetime)
+    // Read back as studio wall clock, so opening a schedule on a laptop in
+    // another timezone does not silently move it on save.
+    const startDate = studioWallClockFromISO(event.start_datetime)
+    const endDate = studioWallClockFromISO(event.end_datetime)
 
     setFormData({
       class_id: event.class_id,
@@ -204,8 +207,8 @@ export function ScheduleForm({ event, selectedDate, onClose }: ScheduleFormProps
         if (!isExceptionDate(currentDate)) {
           const eventEnd = new Date(currentDate.getTime() + duration)
           events.push({
-            start_datetime: currentDate.toISOString(),
-            end_datetime: eventEnd.toISOString()
+            start_datetime: studioWallClockToISO(currentDate),
+            end_datetime: studioWallClockToISO(eventEnd)
           })
         }
         currentDate = addDays(currentDate, rule.interval || 1)
@@ -233,8 +236,8 @@ export function ScheduleForm({ event, selectedDate, onClose }: ScheduleFormProps
               if (eventDate >= startDateTime && eventDate <= endDate && !isExceptionDate(eventDate)) {
                 const eventEnd = new Date(eventDate.getTime() + duration)
                 events.push({
-                  start_datetime: eventDate.toISOString(),
-                  end_datetime: eventEnd.toISOString()
+                  start_datetime: studioWallClockToISO(eventDate),
+                  end_datetime: studioWallClockToISO(eventEnd)
                 })
               }
             }
@@ -253,8 +256,8 @@ export function ScheduleForm({ event, selectedDate, onClose }: ScheduleFormProps
           if (!isExceptionDate(currentDate)) {
             const eventEnd = new Date(currentDate.getTime() + duration)
             events.push({
-              start_datetime: currentDate.toISOString(),
-              end_datetime: eventEnd.toISOString()
+              start_datetime: studioWallClockToISO(currentDate),
+              end_datetime: studioWallClockToISO(eventEnd)
             })
           }
           currentDate = addWeeks(currentDate, rule.interval || 1)
@@ -274,8 +277,8 @@ export function ScheduleForm({ event, selectedDate, onClose }: ScheduleFormProps
           if (!isExceptionDate(currentDate)) {
             const eventEnd = new Date(currentDate.getTime() + duration)
             events.push({
-              start_datetime: currentDate.toISOString(),
-              end_datetime: eventEnd.toISOString()
+              start_datetime: studioWallClockToISO(currentDate),
+              end_datetime: studioWallClockToISO(eventEnd)
             })
           }
         }
@@ -341,8 +344,8 @@ export function ScheduleForm({ event, selectedDate, onClose }: ScheduleFormProps
           .from('class_schedules')
           .insert({
             class_id: formData.class_id,
-            start_datetime: startDateTime.toISOString(),
-            end_datetime: endDateTime.toISOString(),
+            start_datetime: studioWallClockToISO(startDateTime),
+            end_datetime: studioWallClockToISO(endDateTime),
             is_recurring: false
           })
 
